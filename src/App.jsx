@@ -4,7 +4,6 @@ import HeroSection from "./components/HeroSection";
 import Footer from "./components/Footer";
 import ArticleSection from "./components/ArticleSection";
 
-
 function App() {
   
 
@@ -14,6 +13,7 @@ function App() {
       <HeroSection />
       <ArticleSection />
       <Footer />
+  
     </>
   );
 }

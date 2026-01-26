@@ -1,5 +1,6 @@
 import { Search, ChevronDown } from "lucide-react";
-
+import BlogCard from "./BlogCard";
+import { blogPosts } from "../data/blogPosts";
 const ArticleSection = () => {
   const categories = ["Highlight", "Cat", "Inspiration", "General"];
   const selectedCategory = "Highlight";
@@ -62,6 +63,11 @@ const ArticleSection = () => {
             </button>
           </div>
         </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {blogPosts.map((post) => (
+        <BlogCard key={post.id} image={post.image} category={post.category} title={post.title} description={post.description} author={post.author} date={post.date} />
+      ))}
       </div>
     </section>
   );
