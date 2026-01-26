@@ -36,6 +36,11 @@
   --color-white: #ffffff;
 }
 
+/* Apply Poppins font globally */
+body {
+  font-family: "Poppins", sans-serif;
+}
+
 /* Typography Utility Classes */
 @layer utilities {
   .text-headline-1 {
