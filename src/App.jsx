@@ -1,5 +1,6 @@
 import "./App.css";
 import Navbar from "./components/Navbar";
+import HeroSection from "./components/HeroSection";
 
 
 function App() {
@@ -8,9 +9,7 @@ function App() {
   return (
     <>
       <Navbar />
-      <section>
-        <h1 className="text-3xl font-bold underline">My First React App on Vite</h1>
-      </section>
+      <HeroSection />
     </>
   );
 }
