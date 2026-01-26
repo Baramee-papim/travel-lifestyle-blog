@@ -1,9 +1,16 @@
-import { Search, ChevronDown } from "lucide-react";
+import { Search } from "lucide-react";
 import BlogCard from "./BlogCard";
 import { blogPosts } from "../data/blogPosts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
 const ArticleSection = () => {
   const categories = ["Highlight", "Cat", "Inspiration", "General"];
-  const selectedCategory = "Highlight";
+  const selectedCategory = "Select category";
 
   return (
     <section className="bg-white py-8 md:px-8">
@@ -14,7 +21,7 @@ const ArticleSection = () => {
         {/* Desktop Layout */}
         <div className="hidden md:flex items-center justify-between gap-4 bg-brown-100 py-4 px-6 rounded-[16px]">
           {/* Category Buttons */}
-          <div className="flex items-center gap-2 bg">
+          <div className="flex items-center gap-2">
             {categories.map((category) => (
               <button
                 key={category}
@@ -53,18 +60,27 @@ const ArticleSection = () => {
           </div>
 
           {/* Category Dropdown */}
-          <div className="relative">
-            <label className="block text-body-1 text-brown-600 mb-2">Category</label>
-            <button
-              className="w-full px-4 py-2 border border-brown-300 rounded-md text-body-1 text-brown-600 bg-white flex items-center justify-between hover:bg-brown-100 transition-colors"
-            >
-              <span className="text-brown-400">{selectedCategory}</span>
-              <ChevronDown className="w-5 h-5 text-brown-400" />
-            </button>
+          <div className="md:hidden w-full">
+            <label className="block text-body-1 text-brown-400 mb-2">Category</label>
+            <Select value="Highlight">
+              <SelectTrigger className="w-full px-4 py-3 border border-brown-300 text-brown-400 bg-white text-body-1 ">
+                <SelectValue 
+                placeholder="Select category" 
+                className="text-brown-400"
+                />
+              </SelectTrigger>
+              <SelectContent className="bg-white border-brown-300">
+                {categories.map((category) => (
+                  <SelectItem key={category} value={category} className="text-brown-600 focus:bg-brown-100">
+                    {category}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4">
       {blogPosts.map((post) => (
         <BlogCard key={post.id} image={post.image} category={post.category} title={post.title} description={post.description} author={post.author} date={post.date} />
       ))}
