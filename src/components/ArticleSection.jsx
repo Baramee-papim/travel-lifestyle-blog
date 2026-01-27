@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Search } from "lucide-react";
 import BlogCard from "./BlogCard";
 import { blogPosts } from "../data/blogPosts";
@@ -9,6 +10,7 @@ import {
   SelectValue,
 } from "./ui/select";
 const ArticleSection = () => {
+  const [category, setCategory] = useState("Highlight");
   const categories = ["Highlight", "Cat", "Inspiration", "General"];
   const selectedCategory = "Select category";
 
@@ -22,16 +24,15 @@ const ArticleSection = () => {
         <div className="hidden md:flex items-center justify-between gap-4 bg-brown-100 py-4 px-6 rounded-[16px]">
           {/* Category Buttons */}
           <div className="flex items-center gap-2">
-            {categories.map((category) => (
+            {categories.map((cat) => (
               <button
-                key={category}
-                className={`px-4 py-2 rounded-md text-body-1 transition-colors ${
-                  selectedCategory === category
-                    ? "bg-brown-300 text-brown-600"
-                    : " text-brown-400 hover:bg-brown-100 "
-                }`}
+              disabled={category === cat} // ปิดการคลิกปุ่มที่ถูกเลือก
+              onClick={() => setCategory(cat)} // เปลี่ยน State เมื่อคลิก
+              className={`px-4 py-2 rounded-sm transition-colors ${
+                category === cat ? "bg-blue-500 text-white" : " hover:bg-gray-300" // สีปุ่มเมื่อไม่ได้ถูกเลือก
+            } `}
               >
-                {category}
+              {cat}
               </button>
             ))}
           </div>
@@ -62,17 +63,20 @@ const ArticleSection = () => {
           {/* Category Dropdown */}
           <div className="md:hidden w-full">
             <label className="block text-body-1 text-brown-400 mb-2">Category</label>
-            <Select value="Highlight">
+            <Select 
+            value={category}
+            onValueChange={(value) => setCategory(value)}
+            >
               <SelectTrigger className="w-full px-4 py-3 border border-brown-300 text-brown-400 bg-white text-body-1 ">
                 <SelectValue 
                 placeholder="Select category" 
                 className="text-brown-400"
                 />
               </SelectTrigger>
-              <SelectContent className="bg-white border-brown-300">
-                {categories.map((category) => (
-                  <SelectItem key={category} value={category} className="text-brown-600 focus:bg-brown-100">
-                    {category}
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
                   </SelectItem>
                 ))}
               </SelectContent>
