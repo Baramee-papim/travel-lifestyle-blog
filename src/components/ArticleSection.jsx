@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search } from "lucide-react";
 import BlogCard from "./BlogCard";
-import { blogPosts } from "../data/blogPosts";
+import axios from "axios";
 import {
   Select,
   SelectContent,
@@ -12,8 +12,20 @@ import {
 const ArticleSection = () => {
   const [category, setCategory] = useState("Highlight");
   const categories = ["Highlight", "Cat", "Inspiration", "General"];
-  const selectedCategory = "Select category";
+  const [posts, setPosts] = useState([]);
 
+  useEffect(() => {
+    fetchPosts()
+  }, []);
+  
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get("https://blog-post-project-api.vercel.app/posts");
+      setPosts(response.data.posts);
+    } catch (error) {
+      console.error("Error fetching posts:", error);
+    }
+  };
   return (
     <section className="bg-white py-8 md:px-8">
       <div className="max-w-7xl mx-auto">
@@ -66,6 +78,7 @@ const ArticleSection = () => {
             <Select 
             value={category}
             onValueChange={(value) => setCategory(value)}
+
             >
               <SelectTrigger className="w-full px-4 py-3 border border-brown-300 text-brown-400 bg-white text-body-1 ">
                 <SelectValue 
@@ -85,8 +98,12 @@ const ArticleSection = () => {
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4">
-      {blogPosts.map((post) => (
-        <BlogCard key={post.id} image={post.image} category={post.category} title={post.title} description={post.description} author={post.author} date={post.date} />
+      {posts.map((blog, index) => (
+        <BlogCard key={index} image={blog.image} category={blog.category} title={blog.title} description={blog.description} author={blog.author} date={new Date(blog.date).toLocaleDateString("en-GB", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          })} />
       ))}
       </div>
     </section>
