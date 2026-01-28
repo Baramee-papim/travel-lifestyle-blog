@@ -1,5 +1,23 @@
-import { Github, Linkedin, Facebook } from "lucide-react";
+import { Github, Linkedin, Mail } from "lucide-react";
 const Footer = () => {
+  const icons = [
+    {
+      name: "LinkedIn",
+      icon: <Linkedin className="w-4 h-4 text-white" />,
+      href: "https://linkedin.com"
+    },
+    {
+      name: "GitHub",
+      icon: <Github className="w-4 h-4 text-white" />,
+      href: "https://github.com"
+    },
+    {
+      name: "Mail",
+      icon: <Mail className="w-4 h-4 text-white" />,
+      href: "https://hotmail.com"
+    }
+  ]
+  
   return (
     <footer className="bg-brown-200 px-8 py-6">
       <div className="max-w-7xl mx-auto bg-brown-200 px-8 py-6 rounded-lg flex flex-col md:flex-row items-center justify-between gap-1.5">
@@ -9,38 +27,15 @@ const Footer = () => {
           
           {/* Social Media Icons */}
           <div className="flex items-center gap-3">
-            {/* LinkedIn Icon */}
-            <a 
-              href="https://linkedin.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-6 h-6 rounded-full bg-brown-600 flex items-center justify-center hover:bg-brown-500 transition-colors"
-              aria-label="LinkedIn"
-            >
-              <Linkedin className="w-5 h-5 text-white" />
-            </a>
-
-            {/* GitHub Icon */}
-            <a 
-              href="https://github.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-6 h-6 rounded-full bg-brown-600 flex items-center justify-center hover:bg-brown-500 transition-colors"
-              aria-label="GitHub"
-            >
-              <Github className="w-5 h-5 text-white" />
-            </a>
-
-            {/* Facebook Icon */}
-            <a 
-              href="https://facebook.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="w-6 h-6 rounded-full bg-brown-600 flex items-center justify-center hover:bg-brown-500 transition-colors"
-              aria-label="Facebook"
-            >
-              <Facebook className="w-5 h-5 text-white" />
-            </a>
+            {icons.map((icon) => (
+              <a 
+              href={icon.href} 
+              key={icon.name}
+              className="w-6 h-6 rounded-full bg-brown-500 flex items-center justify-center hover:bg-brown-500 transition-colors"
+              >
+                {icon.icon}
+              </a>
+            ))}           
           </div>
         </div>
 
