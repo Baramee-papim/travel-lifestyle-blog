@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 const Navbar = () => {
+  const navigate = useNavigate();
   return (
     <nav className="bg-brown-100 px-6 py-3 flex items-center justify-between border-b border-brown-300">
       {/* Logo Section */}
