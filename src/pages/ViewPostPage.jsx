@@ -96,8 +96,29 @@ const ViewPostPage = () => {
             setShowAlertDialog(true);
             return;
         }
-        // Handle share functionality here
-        console.log(`Sharing to ${platform}`);
+        
+        // Get the current article URL
+        const articleUrl = encodeURIComponent(window.location.href);
+        
+        // Define sharing URLs for each platform
+        let shareUrl = "";
+        
+        switch (platform) {
+            case "Facebook":
+                shareUrl = `https://www.facebook.com/share.php?u=${articleUrl}`;
+                break;
+            case "LinkedIn":
+                shareUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${articleUrl}`;
+                break;
+            case "Twitter":
+                shareUrl = `https://www.twitter.com/share?&url=${articleUrl}`;
+                break;
+            default:
+                return;
+        }
+        
+        // Open the sharing URL in a new window
+        window.open(shareUrl, "_blank", "width=600,height=400");
     };
 
     const handleCommentSubmit = (e) => {
