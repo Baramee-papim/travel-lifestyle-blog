@@ -1,47 +1,46 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { Facebook, Linkedin, Twitter, Copy, Send } from "lucide-react";
+import { Facebook, Linkedin, Twitter, Copy, Send, RefreshCw } from "lucide-react";
+import axios from "axios";
+import AlertDialog from "../components/ui/alert-dialog";
 
 const ViewPostPage = () => {
+    const { id } = useParams();
     const [comment, setComment] = useState("");
+    const [post, setPost] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(() => {
+        // ตรวจสอบสถานะ login จาก localStorage
+        return localStorage.getItem("isLoggedIn") === "true";
+    });
+    const [showAlertDialog, setShowAlertDialog] = useState(false);
+    const [likes, setLikes] = useState(321); // จำนวนไลก์เริ่มต้น
 
-    // Hardcoded post data
-    const post = {
-        id: 1,
-        image: "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449771/my-blog-post/gsutzgam24abrvgee9r4.jpg",
-        category: "Pets",
-        title: "The Fascinating World of Cats: Why We Love Our Furry Friends",
-        description: "Cats have captivated human hearts for thousands of years. Whether lounging in a sunny spot or playfully chasing a string, these furry companions bring warmth and joy to millions of homes. But what makes cats so special? Let's delve into the unique traits, behaviors, and quirks that make cats endlessly fascinating.",
-        author: "Thompson P.",
-        date: "8 September 2024",
-        content: `## 1. Independent yet Affectionate
+    useEffect(() => {
+        fetchPost();
+    }, [id]);
 
-Cats are known for their unique balance between independence and affection. They can entertain themselves for hours, yet they also seek out human companionship when they want it. This makes them perfect pets for people who appreciate a companion that respects personal space while still offering love and warmth.
-
-* Cats can be left alone for longer periods than dogs
-* They show affection on their own terms
-* Their independent nature makes them low-maintenance pets
-
-## 2. Playful Personalities
-
-Cats are naturally curious and playful creatures. From chasing a laser pointer to pouncing on a toy mouse, their playful antics can provide endless entertainment. This playful nature isn't just for fun—it's also how they stay mentally and physically stimulated.
-
-### Communication Through Body Language
-
-Cats communicate in subtle ways, and learning to read their body language can deepen your bond with your feline friend.
-
-* Purring: Usually a sign of contentment, though cats may also purr when anxious or in pain.
-* Tail Position: A tail held high usually indicates a happy and confident cat, while a puffed-up tail suggests fear or aggression.
-* Slow Blinks: Often a slow blink indicates trust and affection. If your cat slow blinks at you, try returning the gesture to strengthen your bond.
-
-## 3. Health Benefits of Having a Cat
-
-Owning a cat can be good for your health. Studies have shown that petting a cat can reduce stress and blood pressure. The calming sound of a cat's purr can even help with healing. The companionship of a cat can combat loneliness and provide emotional support, making cat owners less likely to experience feelings of anxiety and depression.
-
-## 4. History with Humans
-
-Cats were first domesticated around 9,500 years ago, originally valued for their ability to control pests. In ancient Egypt, cats were revered and even worshipped. Killing a cat was punishable by death, and families often mummified their cats to honor them after death. Today, cats remain cherished members of the family, bringing joy and companionship to millions of homes worldwide.`
+    const fetchPost = async () => {
+        try {
+            setLoading(true);
+            const response = await axios.get("https://blog-post-project-api.vercel.app/posts");
+            const posts = response.data.posts;
+            const foundPost = posts.find(p => p.id === parseInt(id));
+            
+            if (foundPost) {
+                setPost(foundPost);
+            } else {
+                setError("Post not found");
+            }
+        } catch (error) {
+            console.error("Error fetching post:", error);
+            setError("Failed to load post");
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleCopyLink = () => {
@@ -49,15 +48,81 @@ Cats were first domesticated around 9,500 years ago, originally valued for their
         alert("Link copied to clipboard!");
     };
 
+    const handleLike = () => {
+        if (!isLoggedIn) {
+            setShowAlertDialog(true);
+            return;
+        }
+        // Handle like functionality here
+        setLikes(prev => prev + 1);
+    };
+
+    const handleShareClick = (platform) => {
+        if (!isLoggedIn) {
+            setShowAlertDialog(true);
+            return;
+        }
+        // Handle share functionality here
+        console.log(`Sharing to ${platform}`);
+    };
+
     const handleCommentSubmit = (e) => {
         e.preventDefault();
+        if (!isLoggedIn) {
+            setShowAlertDialog(true);
+            return;
+        }
         // Handle comment submission here
         console.log("Comment:", comment);
         setComment("");
     };
 
+    const handleCommentChange = (e) => {
+        setComment(e.target.value);
+    };
+
+    const handleCommentFocus = () => {
+        if (!isLoggedIn) {
+            setShowAlertDialog(true);
+        }
+    };
+
+    const handleAlertConfirm = () => {
+        setShowAlertDialog(false);
+        // ในอนาคตสามารถ redirect ไปหน้า login ได้
+        // navigate("/login");
+    };
+
     // Parse content sections (assuming content is markdown-like format)
-    const contentSections = post.content ? post.content.split('\n\n').filter(section => section.trim()) : [];
+    const contentSections = post?.content ? post.content.split('\n\n').filter(section => section.trim()) : [];
+
+    if (loading) {
+        return (
+            <div className="bg-white min-h-screen">
+                <Navbar />
+                <div className="max-w-7xl mx-auto px-4 py-8">
+                    <div className="flex items-center justify-center min-h-[400px]">
+                        <p className="text-body-1 text-brown-500">Loading...</p>
+                    </div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
+
+    if (error || !post) {
+        return (
+            <div className="bg-white min-h-screen">
+                <Navbar />
+                <div className="max-w-7xl mx-auto px-4 py-8">
+                    <div className="flex items-center justify-center min-h-[400px]">
+                        <p className="text-body-1 text-brown-500">{error || "Post not found"}</p>
+                    </div>
+                </div>
+                <Footer />
+            </div>
+        );
+    }
 
     return (
         <div className="bg-white min-h-screen">
@@ -84,7 +149,11 @@ Cats were first domesticated around 9,500 years ago, originally valued for their
                                     {post.category}
                                 </span>
                                 <span className="text-body-2 text-brown-400">
-                                    {post.date}
+                                    {new Date(post.date).toLocaleDateString("en-GB", {
+                                        day: "numeric",
+                                        month: "long",
+                                        year: "numeric",
+                                    })}
                                 </span>
                             </div>
                             
@@ -145,6 +214,17 @@ Cats were first domesticated around 9,500 years ago, originally valued for their
 
                         {/* Share and Comment Section */}
                         <div className="border-t border-brown-300 pt-6 mt-8">
+                            {/* Like Button */}
+                            <div className="mb-6">
+                                <button
+                                    onClick={handleLike}
+                                    className="flex items-center gap-2 px-4 py-2 bg-brown-100 text-brown-600 rounded-md hover:bg-brown-200 transition-colors text-body-2"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                    {likes}
+                                </button>
+                            </div>
+
                             {/* Share Buttons */}
                             <div className="flex items-center gap-4 mb-6">
                                 <button className="px-4 py-2 bg-brown-100 text-brown-600 rounded-md hover:bg-brown-200 transition-colors text-body-2">
@@ -158,13 +238,22 @@ Cats were first domesticated around 9,500 years ago, originally valued for their
                                     Copy link
                                 </button>
                                 <div className="flex items-center gap-2">
-                                    <button className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+                                    <button 
+                                        onClick={() => handleShareClick("Facebook")}
+                                        className="p-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                                    >
                                         <Facebook className="w-4 h-4" />
                                     </button>
-                                    <button className="p-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors">
+                                    <button 
+                                        onClick={() => handleShareClick("LinkedIn")}
+                                        className="p-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors"
+                                    >
                                         <Linkedin className="w-4 h-4" />
                                     </button>
-                                    <button className="p-2 bg-blue-400 text-white rounded-md hover:bg-blue-500 transition-colors">
+                                    <button 
+                                        onClick={() => handleShareClick("Twitter")}
+                                        className="p-2 bg-blue-400 text-white rounded-md hover:bg-blue-500 transition-colors"
+                                    >
                                         <Twitter className="w-4 h-4" />
                                     </button>
                                 </div>
@@ -176,7 +265,8 @@ Cats were first domesticated around 9,500 years ago, originally valued for their
                                 <form onSubmit={handleCommentSubmit} className="space-y-4">
                                     <textarea
                                         value={comment}
-                                        onChange={(e) => setComment(e.target.value)}
+                                        onChange={handleCommentChange}
+                                        onFocus={handleCommentFocus}
                                         placeholder="What are your thoughts?"
                                         className="w-full px-4 py-3 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent resize-none"
                                         rows="4"
@@ -220,6 +310,13 @@ Cats were first domesticated around 9,500 years ago, originally valued for their
             </div>
 
             <Footer />
+            
+            {/* Alert Dialog */}
+            <AlertDialog
+                open={showAlertDialog}
+                onClose={() => setShowAlertDialog(false)}
+                onConfirm={handleAlertConfirm}
+            />
         </div>
     );
 };
