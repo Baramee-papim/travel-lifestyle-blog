@@ -99,7 +99,15 @@ const ArticleSection = () => {
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4">
       {posts.map((blog, index) => (
-        <BlogCard key={index} image={blog.image} category={blog.category} title={blog.title} description={blog.description} author={blog.author} date={new Date(blog.date).toLocaleDateString("en-GB", {
+        <BlogCard 
+        key={index} 
+        id={blog.id}
+        image={blog.image} 
+        category={blog.category} 
+        title={blog.title} 
+        description={blog.description} 
+        author={blog.author} 
+        date={new Date(blog.date).toLocaleDateString("en-GB", {
             day: "numeric",
             month: "long",
             year: "numeric",
