@@ -5,8 +5,13 @@ const Toaster = ({
 }) => {
   return (
     <Sonner
-      richColors
       closeButton
+      toastOptions={{
+        style: {
+          borderRadius: "12px",
+          fontFamily: '"Poppins", sans-serif',
+        },
+      }}
       {...props} 
     />
   );
