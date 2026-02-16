@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import ViewPostPage from "./pages/ViewPostPage";
+import SignupPage from "./pages/SignupPage";
 import { Toaster } from "./components/ui/sonner";
 import NotFoundPage from "./pages/NotFoundPage";
 // import LoginPage from "./pages/LoginPage";
