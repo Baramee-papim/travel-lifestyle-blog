@@ -92,10 +92,7 @@ const ViewPostPage = () => {
     };
 
     const handleShareClick = (platform) => {
-        if (!isLoggedIn) {
-            setShowAlertDialog(true);
-            return;
-        }
+      
         
         // Get the current article URL
         const articleUrl = encodeURIComponent(window.location.href);
