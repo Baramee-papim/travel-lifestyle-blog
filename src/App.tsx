@@ -4,8 +4,9 @@ import ViewPostPage from "./pages/ViewPostPage";
 import SignupPage from "./pages/SignupPage";
 import { Toaster } from "./components/ui/sonner";
 import NotFoundPage from "./pages/NotFoundPage";
-// import LoginPage from "./pages/LoginPage";
 import ComponentsPage from "./pages/ComponentsPage";
+import LoginPage from "./pages/LoginPage";
+
 function App() {
   return (
     <Router>
