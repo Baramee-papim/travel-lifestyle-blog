@@ -59,6 +59,7 @@ const ArticleSection = () => {
           <div className="flex items-center gap-2">
             {categories.map((cat) => (
               <button
+              key={cat}
               disabled={category === cat} // ปิดการคลิกปุ่มที่ถูกเลือก
               onClick={() => setCategory(cat)} // เปลี่ยน State เมื่อคลิก
               className={`px-4 py-2 rounded-sm transition-colors ${
@@ -135,9 +136,8 @@ const ArticleSection = () => {
           <div className="md:hidden w-full">
             <label className="block text-body-1 text-brown-400 mb-2">Category</label>
             <Select 
-            value={category}
+            value={category || undefined}
             onValueChange={(value) => setCategory(value)}
-
             >
               <SelectTrigger className="w-full px-4 py-3 border border-brown-300 text-brown-400 bg-white text-body-1 ">
                 <SelectValue 
