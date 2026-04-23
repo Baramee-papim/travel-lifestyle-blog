@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, type ChangeEvent } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+
 import { Search } from "lucide-react";
 import BlogCard from "./BlogCard";
 import axios from "axios";
@@ -16,10 +16,9 @@ import {
 const ArticleSection = () => {
   const navigate = useNavigate();
   const [category, setCategory] = useState("Highlight");
-  const [query, setQuery] = useState("");
-  const categories = ["Highlight", "Cat", "Inspiration", "General"];
-  const [allPosts, setAllPosts] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const categories = ["Highlight", "Cat", "Inspiration", "General"];
+  const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [page, setPage] = useState(1);
   const [limit] = useState(6);
   const [hasMore, setHasMore] = useState(true);
@@ -27,7 +26,11 @@ const ArticleSection = () => {
   const isFetchingRef = useRef(false);
 
   const fetchPosts = useCallback(
-    async (selectedCategory, pageNum = 1, limitNum = 6) => {
+    async (
+      selectedCategory: string,
+      pageNum: number = 1,
+      limitNum: number = 6,
+    ): Promise<void> => {
       // Prevent duplicate requests
       if (isFetchingRef.current) return;
 
@@ -45,7 +48,7 @@ const ArticleSection = () => {
 
         url += `?${params.toString()}`;
 
-        const response = await axios.get(url);
+        const response = await axios.get<PostsApiResponse>(url);
         const newPosts = response.data.posts || [];
 
         if (pageNum === 1) {
@@ -68,6 +71,10 @@ const ArticleSection = () => {
     },
     [],
   );
+
+  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
 
   useEffect(() => {
     // Reset page to 1 when category changes
@@ -100,7 +107,7 @@ const ArticleSection = () => {
       })
     : [];
 
-  const handlePostClick = (postId) => {
+  const handlePostClick = (postId: number) => {
     navigate(`/post/${postId}`);
     setSearchQuery(""); // Clear search after navigation
   };
@@ -137,8 +144,8 @@ const ArticleSection = () => {
             <input
               type="text"
               placeholder="Search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              value={searchQuery}
+              onChange={handleSearchChange}
               className="w-full px-4 py-2 pr-10 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 bg-white focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent"
             />
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-brown-400 pointer-events-none" />
@@ -169,8 +176,8 @@ const ArticleSection = () => {
             <input
               type="text"
               placeholder="Search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
+              value={searchQuery}
+              onChange={handleSearchChange}
               className="w-full px-4 py-2 pr-10 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent"
             />
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-brown-400 pointer-events-none" />
@@ -219,7 +226,6 @@ const ArticleSection = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4">
         {allPosts.map((blog) => (
           <BlogCard
-            key={blog.id}
             key={blog.id}
             id={blog.id}
             image={blog.image}
