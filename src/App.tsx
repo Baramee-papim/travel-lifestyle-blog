@@ -6,7 +6,7 @@ import { Toaster } from "./components/ui/sonner";
 import NotFoundPage from "./pages/NotFoundPage";
 import ComponentsPage from "./pages/ComponentsPage";
 import LoginPage from "./pages/LoginPage";
-
+import ComponentsPage from "./pages/ComponentsPage";
 function App() {
   return (
     <Router>
