@@ -323,7 +323,7 @@ body {
 
 /* Success toast - สีเขียว */
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] {
-  background-color: rgb(25, 172, 69) !important;
+  background-color: #12B279 !important;
   color: white !important;
   border: none !important;
   border-radius: 12px !important;
@@ -333,13 +333,14 @@ body {
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] [data-title] {
   color: white !important;
   font-weight: 600 !important;
-  font-size: 16px !important;
+  font-size: 20px !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] [data-description] {
   color: white !important;
   opacity: 0.95 !important;
   font-size: 14px !important;
+  font-weight: 500 !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-type="success"] button[data-close-button],
@@ -369,7 +370,7 @@ body {
 
 /* Error toast */
 [data-sonner-toaster] [data-sonner-toast][data-type="error"] {
-  background-color: #ef4444 !important;
+  background-color: #EB5164 !important;
   color: white !important;
   border: none !important;
   border-radius: 12px !important;
@@ -379,11 +380,14 @@ body {
 [data-sonner-toaster] [data-sonner-toast][data-type="error"] [data-title] {
   color: white !important;
   font-weight: 600 !important;
+  font-size: 20px !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-type="error"] [data-description] {
   color: white !important;
   opacity: 0.95 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
 }
 
 [data-sonner-toaster] [data-sonner-toast][data-type="error"] button[data-close-button],

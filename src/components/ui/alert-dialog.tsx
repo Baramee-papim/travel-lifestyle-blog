@@ -1,6 +1,12 @@
 import { X } from "lucide-react";
 
-const AlertDialog = ({ open, onClose, onConfirm }) => {
+interface AlertDialogProps {
+  open: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+}
+
+const AlertDialog = ({ open, onClose, onConfirm }: AlertDialogProps) => {
   if (!open) return null;
 
   return (

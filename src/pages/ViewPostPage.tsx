@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -7,20 +7,30 @@ import axios from "axios";
 import AlertDialog from "../components/ui/alert-dialog";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
+import type { ChangeEvent, FormEvent } from "react";
+import type { BlogPost, PostsApiResponse } from "../types/blog";
+
+interface PostComment {
+    id: number;
+    author: string;
+    avatar: string;
+    date: string;
+    content: string;
+}
 
 const ViewPostPage = () => {
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const [comment, setComment] = useState("");
-    const [post, setPost] = useState(null);
+    const [post, setPost] = useState<BlogPost | null>(null);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
+    const [error, setError] = useState<string | null>(null);
     const [isLoggedIn, setIsLoggedIn] = useState(() => {
         // ตรวจสอบสถานะ login จาก localStorage
         return localStorage.getItem("isLoggedIn") === "true";
     });
     const [showAlertDialog, setShowAlertDialog] = useState(false);
     const [likes, setLikes] = useState(0); // จำนวนไลก์จะดึงจาก database
-    const [comments, setComments] = useState([
+    const [comments, setComments] = useState<PostComment[]>([
         // Mock comments data - จะดึงจาก database ในอนาคต
         {
             id: 1,
@@ -46,30 +56,37 @@ const ViewPostPage = () => {
     ]);
 
     useEffect(() => {
+        const fetchPost = async () => {
+            if (!id) {
+                setError("Post not found");
+                setLoading(false);
+                return;
+            }
+
+            try {
+                setLoading(true);
+                const response = await axios.get<PostsApiResponse>("https://blog-post-project-api.vercel.app/posts");
+                const posts = response.data.posts;
+                const postId = Number(id);
+                const foundPost = posts.find((item) => item.id === postId);
+                
+                if (foundPost) {
+                    setPost(foundPost);
+                    setLikes(foundPost.likes ?? 0);
+                    setError(null);
+                } else {
+                    setError("Post not found");
+                }
+            } catch (fetchError) {
+                console.error("Error fetching post:", fetchError);
+                setError("Failed to load post");
+            } finally {
+                setLoading(false);
+            }
+        };
+
         fetchPost();
     }, [id]);
-
-    const fetchPost = async () => {
-        try {
-            setLoading(true);
-            const response = await axios.get("https://blog-post-project-api.vercel.app/posts");
-            const posts = response.data.posts;
-            const foundPost = posts.find(p => p.id === parseInt(id));
-            
-            if (foundPost) {
-                setPost(foundPost);
-                // ดึง likes จาก database
-                setLikes(foundPost.likes || 0);
-            } else {
-                setError("Post not found");
-            }
-        } catch (error) {
-            console.error("Error fetching post:", error);
-            setError("Failed to load post");
-        } finally {
-            setLoading(false);
-        }
-    };
 
     const handleCopyLink = async () => {
         try {
@@ -91,7 +108,7 @@ const ViewPostPage = () => {
         setLikes(prev => prev + 1);
     };
 
-    const handleShareClick = (platform) => {
+    const handleShareClick = (platform: "Facebook" | "LinkedIn" | "Twitter") => {
       
         
         // Get the current article URL
@@ -118,7 +135,7 @@ const ViewPostPage = () => {
         window.open(shareUrl, "_blank", "width=600,height=400");
     };
 
-    const handleCommentSubmit = (e) => {
+    const handleCommentSubmit = (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!isLoggedIn) {
             setShowAlertDialog(true);
@@ -152,7 +169,7 @@ const ViewPostPage = () => {
         // await axios.post(`/posts/${id}/comments`, { content: comment });
     };
 
-    const handleCommentChange = (e) => {
+    const handleCommentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
         setComment(e.target.value);
     };
 
@@ -248,7 +265,7 @@ const ViewPostPage = () => {
                         {/* Article Sections */}
                         <div className="markdown">
                             <ReactMarkdown>
-                                {post.content}
+                                {post.content ?? ""}
                             </ReactMarkdown>
                         </div>
 
@@ -308,7 +325,7 @@ const ViewPostPage = () => {
                                         onFocus={handleCommentFocus}
                                         placeholder="What are your thoughts?"
                                         className="w-full px-4 py-3 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent resize-none"
-                                        rows="4"
+                                        rows={4}
                                     />
                                     <div className="flex justify-end">
                                     <button

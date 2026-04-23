@@ -1,6 +1,14 @@
 import { Github, Linkedin, Mail } from "lucide-react";
+import type { ReactNode } from "react";
+
+interface FooterIcon {
+  name: string;
+  icon: ReactNode;
+  href: string;
+}
+
 const Footer = () => {
-  const icons = [
+  const icons: FooterIcon[] = [
     {
       name: "LinkedIn",
       icon: <Linkedin className="w-4 h-4 text-white" />,
@@ -31,6 +39,8 @@ const Footer = () => {
               <a 
               href={icon.href} 
               key={icon.name}
+              target="_blank"
+              rel="noreferrer"
               className="w-6 h-6 rounded-full bg-brown-500 flex items-center justify-center hover:bg-brown-500 transition-colors"
               >
                 {icon.icon}
