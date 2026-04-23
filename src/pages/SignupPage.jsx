@@ -1,8 +1,38 @@
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { Button } from "../components/ui/button";
+import { useState } from "react";
+import axios from "axios";
+import { toast } from "sonner";
 
 const SignupPage = () => {
+    const [name, setName] = useState("");
+    const [username, setUsername] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [isError, setIsError] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    
+    const validateForm = () => {
+        if (!name || !username || !email || !password) {
+            setIsError(true);
+            toast.error("Please fill in all fields");
+            return false;
+        }
+    }
+    const handleSignup = async (e) => {
+        e.preventDefault();
+        if (!validateForm()) return;
+        setIsLoading(true);
+        try {
+            const response = await axios.post("https://blog-post-project-api.vercel.app/auth/signup", { name, username, email, password });
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Signup failed");
+            setIsError(true);
+        } finally {
+            setIsLoading(false);
+        }
+    }
     return (
         <div className="min-h-screen bg-[#fcfbf8]">
             <Navbar />
@@ -13,7 +43,7 @@ const SignupPage = () => {
                         Sign up
                     </h1>
 
-                    <form className="flex flex-col gap-5">
+                    <form className="flex flex-col gap-5" onSubmit={handleSignup}>
                         <div className="flex flex-col gap-2">
                             <label htmlFor="name" className="text-sm font-medium text-gray-900">
                                 Name
@@ -81,6 +111,6 @@ const SignupPage = () => {
             </div>
         </div>
     );
-};
+}
 
 export default SignupPage;
