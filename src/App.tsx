@@ -6,6 +6,7 @@ import ViewPostPage from "./pages/ViewPostPage";
 import SignupPage from "./pages/SignupPage";
 import LoginPage from "./pages/LoginPage";
 import ComponentsPage from "./pages/ComponentsPage";
+import AdminPanelPage from "./pages/AdminPanelPage";
 function App() {
   return (
     <Router>
@@ -16,6 +17,7 @@ function App() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/components" element={<ComponentsPage />} />
+          <Route path="/admin/*" element={<AdminPanelPage />} />
         </Routes>
         <Toaster position="bottom-right" />
       </AuthProvider>
