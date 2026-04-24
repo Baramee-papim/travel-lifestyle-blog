@@ -4,8 +4,9 @@ import { useState, type FormEvent } from "react";
 import { Button } from "../components/ui/button";
 import { toast } from "sonner";
 import Navbar from "../components/Navbar";
-
+import { useNavigate } from "react-router-dom";
 const SignupPage = () => {
+  const navigate = useNavigate();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -35,6 +36,7 @@ const SignupPage = () => {
         { name, username, email, password },
       );
       console.log(response.data);
+      navigate("/login");
       toast.success("Signup successful");
     } catch (err: unknown) {
       const message = axios.isAxiosError(err)
