@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
 import Footer from "../components/Footer";
 import { Facebook, Linkedin, Twitter, Copy, Send, Heart } from "lucide-react";
 import axios from "axios";
@@ -20,14 +21,11 @@ interface PostComment {
 
 const ViewPostPage = () => {
     const { id } = useParams<{ id: string }>();
+    const { isAuthenticated: isLoggedIn } = useAuth();
     const [comment, setComment] = useState("");
     const [post, setPost] = useState<BlogPost | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [isLoggedIn, setIsLoggedIn] = useState(() => {
-        // ตรวจสอบสถานะ login จาก localStorage
-        return localStorage.getItem("isLoggedIn") === "true";
-    });
     const [showAlertDialog, setShowAlertDialog] = useState(false);
     const [likes, setLikes] = useState(0); // จำนวนไลก์จะดึงจาก database
     const [comments, setComments] = useState<PostComment[]>([
@@ -65,18 +63,10 @@ const ViewPostPage = () => {
 
             try {
                 setLoading(true);
-                const response = await axios.get<PostsApiResponse>("https://blog-post-project-api.vercel.app/posts");
-                const posts = response.data.posts;
-                const postId = Number(id);
-                const foundPost = posts.find((item) => item.id === postId);
-                
-                if (foundPost) {
-                    setPost(foundPost);
-                    setLikes(foundPost.likes ?? 0);
-                    setError(null);
-                } else {
-                    setError("Post not found");
-                }
+                const response = await axios.get<BlogPost>(import.meta.env.VITE_API_BASE_URL + "/api/article/" + id);
+                setPost(response.data);
+                setLikes(response.data.likes ?? 0);
+                setError(null);
             } catch (fetchError) {
                 console.error("Error fetching post:", fetchError);
                 setError("Failed to load post");
