@@ -12,6 +12,7 @@ type CreateArticleContentProps = {
   selectedCategoryId: number | null;
   isSubmitting: boolean;
   isUploadingImage: boolean;
+  isLoadingInitialData?: boolean;
   onTitleChange: (value: string) => void;
   onDescriptionChange: (value: string) => void;
   onContentChange: (value: string) => void;
@@ -32,6 +33,7 @@ const CreateArticleContent = ({
   selectedCategoryId,
   isSubmitting,
   isUploadingImage,
+  isLoadingInitialData = false,
   onTitleChange,
   onDescriptionChange,
   onContentChange,
@@ -73,15 +75,15 @@ const CreateArticleContent = ({
                 accept="image/*"
                 className="hidden"
                 onChange={handleFileChange}
-                disabled={isSubmitting || isUploadingImage}
+                disabled={isSubmitting || isUploadingImage || isLoadingInitialData}
               />
               <button
                 type="button"
                 onClick={handleClickUpload}
-                disabled={isSubmitting || isUploadingImage}
+                disabled={isSubmitting || isUploadingImage || isLoadingInitialData}
                 className="inline-flex h-11 items-center justify-center rounded-full border border-brown-600 px-5 text-body-2 font-semibold text-brown-600 transition-colors hover:border-brown-400 hover:text-brown-400"
               >
-                {isUploadingImage ? "Uploading..." : "Upload thumbnail image"}
+                {isLoadingInitialData ? "Loading..." : isUploadingImage ? "Uploading..." : "Upload thumbnail image"}
               </button>
             </div>
           </div>
@@ -96,7 +98,7 @@ const CreateArticleContent = ({
                 value={selectedCategoryId ?? ""}
                 onChange={(event) => onCategoryChange(Number(event.target.value))}
                 className={inputClassName}
-                disabled={isLoadingCategories || categories.length === 0 || isSubmitting}
+                disabled={isLoadingCategories || categories.length === 0 || isSubmitting || isLoadingInitialData}
               >
                 {categories.length === 0 ? <option value="">No categories</option> : null}
                 {categories.map((category) => (
@@ -118,7 +120,7 @@ const CreateArticleContent = ({
                 onChange={(event) => onTitleChange(event.target.value)}
                 placeholder="Article title"
                 className={inputClassName}
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingInitialData}
               />
             </div>
 
@@ -132,7 +134,7 @@ const CreateArticleContent = ({
                 onChange={(event) => onDescriptionChange(event.target.value.slice(0, 120))}
                 placeholder="Introduction"
                 className="min-h-[110px] w-full rounded-xl border border-brown-300 bg-brown-100 px-3 py-3 text-body-2 text-brown-500 outline-none placeholder:text-brown-400"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingInitialData}
               />
             </div>
 
@@ -146,7 +148,7 @@ const CreateArticleContent = ({
                 onChange={(event) => onContentChange(event.target.value)}
                 placeholder="Content"
                 className="min-h-[280px] w-full rounded-xl border border-brown-300 bg-brown-100 px-3 py-3 text-body-2 text-brown-500 outline-none placeholder:text-brown-400"
-                disabled={isSubmitting}
+                disabled={isSubmitting || isLoadingInitialData}
               />
             </div>
           </div>

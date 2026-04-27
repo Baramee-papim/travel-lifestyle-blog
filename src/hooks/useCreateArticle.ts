@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { getCategories } from "@/services/categoryService";
-import { createArticle } from "@/services/articleService";
+import { createArticle, getArticleById, updateArticle } from "@/services/articleService";
 import { uploadArticleImage } from "@/services/storageService";
 import type { Category } from "@/types/category";
 
@@ -34,15 +34,18 @@ const resolveUploadErrorMessage = (error: unknown): string => {
   return (error.response?.data?.message as string | undefined) || "Could not upload thumbnail. Please try again.";
 };
 
-const useCreateArticle = () => {
+const useCreateArticle = (articleId?: string) => {
   const { token } = useAuth();
   const navigate = useNavigate();
+  const isEditMode = articleId != null && articleId !== "";
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingArticle, setIsLoadingArticle] = useState(isEditMode);
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [thumbnailUrl, setThumbnailUrl] = useState("");
+  const [articleCategoryName, setArticleCategoryName] = useState<string | null>(null);
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingImage, setIsUploadingImage] = useState(false);
@@ -56,7 +59,9 @@ const useCreateArticle = () => {
         const response = await getCategories();
         if (!cancelled) {
           setCategories(response);
-          setSelectedCategoryId(response[0]?.id ?? null);
+          if (!isEditMode) {
+            setSelectedCategoryId(response[0]?.id ?? null);
+          }
         }
       } catch (error) {
         console.error(error);
@@ -75,19 +80,67 @@ const useCreateArticle = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [isEditMode]);
+
+  useEffect(() => {
+    if (!isEditMode || !articleId) {
+      setIsLoadingArticle(false);
+      return;
+    }
+
+    let cancelled = false;
+    const loadArticle = async () => {
+      try {
+        setIsLoadingArticle(true);
+        const article = await getArticleById(articleId);
+        if (cancelled) return;
+        setTitle(article.title ?? "");
+        setDescription(article.description ?? "");
+        setContent(article.content ?? "");
+        setThumbnailUrl(article.image ?? "");
+        setArticleCategoryName(article.category ?? null);
+      } catch (error) {
+        console.error(error);
+        if (!cancelled) {
+          toast.error("Could not load article details.");
+          navigate("/admin/articles");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingArticle(false);
+        }
+      }
+    };
+
+    void loadArticle();
+    return () => {
+      cancelled = true;
+    };
+  }, [articleId, isEditMode, navigate]);
+
+  useEffect(() => {
+    if (categories.length === 0 || articleCategoryName == null) return;
+    const matchedCategory = categories.find(
+      (category) => category.name.toLowerCase() === articleCategoryName.toLowerCase(),
+    );
+    if (matchedCategory) {
+      setSelectedCategoryId(matchedCategory.id);
+      setArticleCategoryName(null);
+    }
+  }, [articleCategoryName, categories]);
 
   const canSubmit = useMemo(() => {
     return (
       !isSubmitting &&
       !isUploadingImage &&
+      !isLoadingArticle &&
       selectedCategoryId != null &&
       thumbnailUrl.trim() !== "" &&
       title.trim() !== "" &&
       description.trim() !== "" &&
       content.trim() !== ""
     );
-  }, [content, description, isSubmitting, isUploadingImage, selectedCategoryId, thumbnailUrl, title]);
+  }, [content, description, isLoadingArticle, isSubmitting, isUploadingImage, selectedCategoryId, thumbnailUrl, title]);
 
   const handleUploadThumbnail = async (file: File) => {
     if (!token) {
@@ -121,29 +174,36 @@ const useCreateArticle = () => {
 
     setIsSubmitting(true);
     try {
-      await createArticle(
-        {
-          image: thumbnailUrl.trim(),
-          category_id: selectedCategoryId,
-          title: title.trim(),
-          description: description.trim(),
-          content: content.trim(),
-          status,
-        },
-        token,
-      );
-      if (status === "published") {
-        toast.success("Article published successfully.");
-        navigate("/admin/articles");
+      const payload = {
+        image: thumbnailUrl.trim(),
+        category_id: selectedCategoryId,
+        title: title.trim(),
+        description: description.trim(),
+        content: content.trim(),
+        status,
+      } as const;
+
+      if (isEditMode && articleId) {
+        await updateArticle(articleId, payload, token);
+        if (status === "published") {
+          toast.success("Article updated and published successfully.");
+        } else {
+          toast.success("Article draft updated successfully.");
+        }
       } else {
-        toast.success("Article saved as draft successfully.");
-        navigate("/admin/articles");
+        await createArticle(payload, token);
+        if (status === "published") {
+          toast.success("Article published successfully.");
+        } else {
+          toast.success("Article saved as draft successfully.");
+        }
       }
+      navigate("/admin/articles");
     } catch (error: unknown) {
       const message = axios.isAxiosError(error)
         ? (error.response?.data?.message as string | undefined)
         : undefined;
-      toast.error(message || "Could not create article. Please try again.");
+      toast.error(message || (isEditMode ? "Could not update article. Please try again." : "Could not create article. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
@@ -159,6 +219,8 @@ const useCreateArticle = () => {
     selectedCategoryId,
     isSubmitting,
     isUploadingImage,
+    isLoadingArticle,
+    isEditMode,
     canSubmit,
     setTitle,
     setDescription,

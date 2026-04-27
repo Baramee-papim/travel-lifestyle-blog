@@ -2,26 +2,28 @@ import useCreateArticle from "@/hooks/useCreateArticle";
 import { Button } from "@/components/ui/button";
 import CreateArticleContent from "./CreateArticleContent";
 import TabLayout from "./TabLayout";
+import { useParams } from "react-router-dom";
 
 const CreateArticleRouteElement = () => {
-  const createArticleState = useCreateArticle();
+  const { articleId } = useParams();
+  const createArticleState = useCreateArticle(articleId);
 
   return (
     <TabLayout
-      title="Create article"
+      title={createArticleState.isEditMode ? "Edit article" : "Create article"}
       headerAction={
         <div className="flex items-center gap-3">
           <Button
             variant="outline"
             className="h-11 px-6"
-            disabled={!createArticleState.canSubmit}
+            disabled={!createArticleState.canSubmit || createArticleState.isLoadingArticle}
             onClick={() => void createArticleState.handleSubmit("draft")}
           >
             Save as draft
           </Button>
           <Button
             className="h-11 px-6"
-            disabled={!createArticleState.canSubmit}
+            disabled={!createArticleState.canSubmit || createArticleState.isLoadingArticle}
             onClick={() => void createArticleState.handleSubmit("published")}
           >
             Save and publish
@@ -39,6 +41,7 @@ const CreateArticleRouteElement = () => {
         selectedCategoryId={createArticleState.selectedCategoryId}
         isSubmitting={createArticleState.isSubmitting}
         isUploadingImage={createArticleState.isUploadingImage}
+        isLoadingInitialData={createArticleState.isLoadingArticle}
         onTitleChange={createArticleState.setTitle}
         onDescriptionChange={createArticleState.setDescription}
         onContentChange={createArticleState.setContent}

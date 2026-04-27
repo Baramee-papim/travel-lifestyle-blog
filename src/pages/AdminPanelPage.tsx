@@ -11,6 +11,7 @@ const AdminPanelPage = () => {
     <AdminPanelShell>
       <Routes>
         <Route path="articles/create" element={<CreateArticleRouteElement />} />
+        <Route path="articles/edit/:articleId" element={<CreateArticleRouteElement />} />
         <Route path="articles" element={<ArticleManagementRouteElement />} />
 
         <Route

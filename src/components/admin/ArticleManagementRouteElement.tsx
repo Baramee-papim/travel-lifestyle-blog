@@ -1,12 +1,13 @@
 import { AddRoundIcon } from "@/components/icon";
 import { Button } from "@/components/ui/button";
 import useAdminArticles from "@/hooks/useAdminArticles";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ArticleManagementContent from "./ArticleManagementContent";
 import TabLayout from "./TabLayout";
 
 const ArticleManagementRouteElement = () => {
   const articleState = useAdminArticles();
+  const navigate = useNavigate();
 
   return (
     <TabLayout
@@ -28,6 +29,7 @@ const ArticleManagementRouteElement = () => {
         pendingDeleteId={articleState.pendingDeleteId}
         isDeleting={articleState.isDeleting}
         onSearchChange={articleState.handleSearchChange}
+        onEditArticle={(articleId) => navigate(`/admin/articles/edit/${articleId}`)}
         onOpenDeleteModal={articleState.handleOpenDeleteModal}
         onCloseDeleteModal={articleState.handleCloseDeleteModal}
         onConfirmDelete={articleState.handleConfirmDelete}

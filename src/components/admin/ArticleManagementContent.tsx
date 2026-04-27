@@ -11,6 +11,7 @@ type ArticleManagementContentProps = {
   pendingDeleteId: number | null;
   isDeleting: boolean;
   onSearchChange: (value: string) => void;
+  onEditArticle: (articleId: number) => void;
   onOpenDeleteModal: (articleId: number) => void;
   onCloseDeleteModal: () => void;
   onConfirmDelete: () => Promise<void>;
@@ -24,6 +25,7 @@ const ArticleManagementContent = ({
   pendingDeleteId,
   isDeleting,
   onSearchChange,
+  onEditArticle,
   onOpenDeleteModal,
   onCloseDeleteModal,
   onConfirmDelete,
@@ -117,7 +119,11 @@ const ArticleManagementContent = ({
                     </td>
                     <td className="px-4 py-4">
                       <div className="flex justify-end gap-3">
-                        <button type="button" className="cursor-pointer opacity-80 transition hover:opacity-100">
+                        <button
+                          type="button"
+                          className="cursor-pointer opacity-80 transition hover:opacity-100"
+                          onClick={() => onEditArticle(article.id)}
+                        >
                           <img src={EditIcon} alt="Edit article" className="h-4 w-4" />
                         </button>
                         <button

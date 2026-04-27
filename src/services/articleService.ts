@@ -72,3 +72,13 @@ export async function createArticle(
     token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
   await axios.post(`${apiBase()}/api/article`, payload, { headers });
 }
+
+export async function updateArticle(
+  articleId: string | number,
+  payload: CreateArticlePayload,
+  token?: string | null,
+): Promise<void> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  await axios.put(`${apiBase()}/api/article/${articleId}`, payload, { headers });
+}
