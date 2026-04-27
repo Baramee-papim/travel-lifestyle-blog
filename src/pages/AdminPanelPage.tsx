@@ -20,7 +20,7 @@ import {
 } from "@/components/icon";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { getArticles } from "@/services/articleService";
+import { deleteArticle, getArticles } from "@/services/articleService";
 import { resetPassword } from "@/services/authService";
 import type { BlogPost } from "@/types/blog";
 
@@ -55,6 +55,8 @@ const ArticleManagementContent = () => {
   const [articles, setArticles] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -84,6 +86,39 @@ const ArticleManagementContent = () => {
       cancelled = true;
     };
   }, [token]);
+
+  const handleOpenDeleteModal = (articleId: number) => {
+    setPendingDeleteId(articleId);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (!isDeleting) {
+      setPendingDeleteId(null);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (pendingDeleteId == null) return;
+    if (!token) {
+      toast.error("Your session has expired. Please login again.");
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteArticle(pendingDeleteId, token);
+      setArticles((prev) => prev.filter((a) => a.id !== pendingDeleteId));
+      toast.success("Article deleted successfully");
+      setPendingDeleteId(null);
+    } catch (err: unknown) {
+      const message = axios.isAxiosError(err)
+        ? (err.response?.data?.message as string | undefined)
+        : undefined;
+      toast.error(message || "Could not delete article. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-brown-300 bg-white">
@@ -163,7 +198,11 @@ const ArticleManagementContent = () => {
                         <button type="button" className="cursor-pointer opacity-80 transition hover:opacity-100">
                           <img src={EditIcon} alt="Edit article" className="h-4 w-4" />
                         </button>
-                        <button type="button" className="cursor-pointer opacity-80 transition hover:opacity-100">
+                        <button
+                          type="button"
+                          className="cursor-pointer opacity-80 transition hover:opacity-100"
+                          onClick={() => handleOpenDeleteModal(article.id)}
+                        >
                           <img src={TrashIcon} alt="Delete article" className="h-4 w-4" />
                         </button>
                       </div>
@@ -175,6 +214,52 @@ const ArticleManagementContent = () => {
           </tbody>
         </table>
       </div>
+
+      {pendingDeleteId != null ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <button
+            type="button"
+            aria-label="Close delete article modal"
+            className="absolute inset-0 bg-black/30"
+            onClick={handleCloseDeleteModal}
+          />
+          <div className="relative z-10 w-full max-w-[640px] rounded-[32px] bg-white px-10 py-8 shadow-xl">
+            <button
+              type="button"
+              onClick={handleCloseDeleteModal}
+              className="absolute right-8 top-8 cursor-pointer opacity-80 transition hover:opacity-100"
+              aria-label="Close modal"
+            >
+              <img src={CloseRoundIcon} alt="Close" className="h-6 w-6" />
+            </button>
+            <div className="text-center">
+              <h3 className="text-headline-3 text-brown-600">Delete article</h3>
+              <p className="mt-4 text-headline-4 font-medium text-brown-500">
+                Do you want to delete this article?
+              </p>
+            </div>
+            <div className="mt-10 flex items-center justify-center gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                className="min-w-[170px]"
+                onClick={handleCloseDeleteModal}
+                disabled={isDeleting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                className="min-w-[170px]"
+                onClick={() => void handleConfirmDelete()}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

@@ -35,3 +35,12 @@ export async function getArticleById(id: string | number): Promise<BlogPost> {
   const { data } = await axios.get<{ data: BlogPost }>(`${apiBase()}/api/article/${id}`);
   return data.data;
 }
+
+export async function deleteArticle(
+  articleId: string | number,
+  token?: string | null,
+): Promise<void> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  await axios.delete(`${apiBase()}/api/article/${articleId}`, { headers });
+}
