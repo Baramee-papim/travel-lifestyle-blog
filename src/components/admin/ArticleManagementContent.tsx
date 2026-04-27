@@ -2,15 +2,22 @@ import { CloseRoundIcon, EditIcon, ExpandDownIcon, SearchIcon, TrashIcon } from 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BlogPost } from "@/types/blog";
+import type { Category } from "@/types/category";
 
 type ArticleManagementContentProps = {
   articles: BlogPost[];
   loading: boolean;
   error: string | null;
+  categories: Category[];
+  isLoadingCategories: boolean;
+  selectedCategoryId: number | null;
+  selectedStatus: "all" | "draft" | "published";
   searchInput: string;
   pendingDeleteId: number | null;
   isDeleting: boolean;
   onSearchChange: (value: string) => void;
+  onCategoryChange: (value: string) => void;
+  onStatusChange: (value: string) => void;
   onEditArticle: (articleId: number) => void;
   onOpenDeleteModal: (articleId: number) => void;
   onCloseDeleteModal: () => void;
@@ -21,10 +28,16 @@ const ArticleManagementContent = ({
   articles,
   loading,
   error,
+  categories,
+  isLoadingCategories,
+  selectedCategoryId,
+  selectedStatus,
   searchInput,
   pendingDeleteId,
   isDeleting,
   onSearchChange,
+  onCategoryChange,
+  onStatusChange,
   onEditArticle,
   onOpenDeleteModal,
   onCloseDeleteModal,
@@ -46,20 +59,38 @@ const ArticleManagementContent = ({
         </div>
 
         <div className="ml-auto flex items-center gap-3">
-          <button
-            type="button"
-            className="flex h-11 min-w-[150px] items-center justify-between rounded-xl border border-brown-300 bg-brown-100 px-3 text-body-2 text-brown-500"
-          >
-            <span>Status</span>
-            <img src={ExpandDownIcon} alt="Expand status" className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            className="flex h-11 min-w-[150px] items-center justify-between rounded-xl border border-brown-300 bg-brown-100 px-3 text-body-2 text-brown-500"
-          >
-            <span>Category</span>
-            <img src={ExpandDownIcon} alt="Expand category" className="h-4 w-4" />
-          </button>
+          <div className="relative">
+            <select
+              className="h-11 min-w-[150px] appearance-none rounded-xl border border-brown-300 bg-brown-100 px-3 pr-9 text-body-2 text-brown-500 outline-none"
+              value={selectedStatus}
+              onChange={(event) => onStatusChange(event.target.value)}
+            >
+              <option value="all">All status</option>
+              <option value="draft">Draft</option>
+              <option value="published">Published</option>
+            </select>
+            <img src={ExpandDownIcon} alt="Expand status" className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2" />
+          </div>
+          <div className="relative">
+            <select
+              className="h-11 min-w-[150px] appearance-none rounded-xl border border-brown-300 bg-brown-100 px-3 pr-9 text-body-2 text-brown-500 outline-none"
+              value={selectedCategoryId ?? "all"}
+              onChange={(event) => onCategoryChange(event.target.value)}
+              disabled={isLoadingCategories}
+            >
+              <option value="all">All category</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            <img
+              src={ExpandDownIcon}
+              alt="Expand category"
+              className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2"
+            />
+          </div>
         </div>
       </div>
 

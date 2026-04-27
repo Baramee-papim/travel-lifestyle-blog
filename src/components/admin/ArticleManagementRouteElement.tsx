@@ -25,10 +25,16 @@ const ArticleManagementRouteElement = () => {
         articles={articleState.articles}
         loading={articleState.loading}
         error={articleState.error}
+        categories={articleState.categories}
+        isLoadingCategories={articleState.isLoadingCategories}
+        selectedCategoryId={articleState.selectedCategoryId}
+        selectedStatus={articleState.selectedStatus}
         searchInput={articleState.searchInput}
         pendingDeleteId={articleState.pendingDeleteId}
         isDeleting={articleState.isDeleting}
         onSearchChange={articleState.handleSearchChange}
+        onCategoryChange={articleState.handleCategoryChange}
+        onStatusChange={articleState.handleStatusChange}
         onEditArticle={(articleId) => navigate(`/admin/articles/edit/${articleId}`)}
         onOpenDeleteModal={articleState.handleOpenDeleteModal}
         onCloseDeleteModal={articleState.handleCloseDeleteModal}

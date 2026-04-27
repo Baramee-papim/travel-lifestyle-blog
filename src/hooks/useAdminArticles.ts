@@ -3,17 +3,52 @@ import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import { deleteArticle, getArticles } from "@/services/articleService";
+import { getCategories } from "@/services/categoryService";
 import type { BlogPost } from "@/types/blog";
+import type { Category } from "@/types/category";
+
+type ArticleFilterStatus = "all" | "draft" | "published";
 
 const useAdminArticles = () => {
   const { token } = useAuth();
   const [articles, setArticles] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
+  const [selectedStatus, setSelectedStatus] = useState<ArticleFilterStatus>("all");
   const [searchInput, setSearchInput] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const list = await getCategories();
+        if (!cancelled) {
+          setCategories(list);
+        }
+      } catch (loadError) {
+        console.error(loadError);
+        if (!cancelled) {
+          toast.error("Could not load categories.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingCategories(false);
+        }
+      }
+    };
+
+    void loadCategories();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -34,6 +69,8 @@ const useAdminArticles = () => {
         setError(null);
         const list = await getArticles(token, {
           keyword: debouncedKeyword || undefined,
+          category: selectedCategoryId ?? undefined,
+          status: selectedStatus === "all" ? undefined : selectedStatus,
         });
         if (!cancelled) {
           setArticles(list);
@@ -54,10 +91,27 @@ const useAdminArticles = () => {
     return () => {
       cancelled = true;
     };
-  }, [debouncedKeyword, token]);
+  }, [debouncedKeyword, selectedCategoryId, selectedStatus, token]);
 
   const handleSearchChange = (value: string) => {
     setSearchInput(value);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    if (value === "all") {
+      setSelectedCategoryId(null);
+      return;
+    }
+    const next = Number(value);
+    if (Number.isInteger(next) && next > 0) {
+      setSelectedCategoryId(next);
+    }
+  };
+
+  const handleStatusChange = (value: string) => {
+    if (value === "all" || value === "draft" || value === "published") {
+      setSelectedStatus(value);
+    }
   };
 
   const handleOpenDeleteModal = (articleId: number) => {
@@ -97,10 +151,16 @@ const useAdminArticles = () => {
     articles,
     loading,
     error,
+    categories,
+    isLoadingCategories,
+    selectedCategoryId,
+    selectedStatus,
     searchInput,
     pendingDeleteId,
     isDeleting,
     handleSearchChange,
+    handleCategoryChange,
+    handleStatusChange,
     handleOpenDeleteModal,
     handleCloseDeleteModal,
     handleConfirmDelete,

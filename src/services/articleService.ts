@@ -26,6 +26,8 @@ function normalizeArticlesPayload(data: unknown): BlogPost[] {
 
 type GetArticlesParams = {
   keyword?: string;
+  category?: number;
+  status?: "draft" | "published";
 };
 
 export type CreateArticlePayload = {
