@@ -1,8 +1,11 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import ArticleManagementRouteElement from "@/components/admin/ArticleManagementRouteElement";
+import CategoryManagementRouteElement from "@/components/admin/CategoryManagementRouteElement";
 import CreateArticleRouteElement from "@/components/admin/CreateArticleRouteElement";
+import CreateCategoryRouteElement from "@/components/admin/CreateCategoryRouteElement";
 import PlaceholderContent from "@/components/admin/PlaceholderContent";
+import ProfileRouteElement from "@/components/admin/ProfileRouteElement";
 import ResetPasswordTabRouteElement from "@/components/admin/ResetPasswordTabRouteElement";
 import TabLayout from "@/components/admin/TabLayout";
 
@@ -11,25 +14,21 @@ const AdminPanelPage = () => {
     <AdminPanelShell>
       <Routes>
         <Route path="articles/create" element={<CreateArticleRouteElement />} />
-        <Route path="articles/edit/:articleId" element={<CreateArticleRouteElement />} />
+        <Route
+          path="articles/edit/:articleId"
+          element={<CreateArticleRouteElement />}
+        />
         <Route path="articles" element={<ArticleManagementRouteElement />} />
-
         <Route
-          path="categories"
-          element={
-            <TabLayout title="Category management">
-              <PlaceholderContent title="Category management" />
-            </TabLayout>
-          }
+          path="category/create"
+          element={<CreateCategoryRouteElement />}
         />
         <Route
-          path="profile"
-          element={
-            <TabLayout title="Profile">
-              <PlaceholderContent title="Profile" />
-            </TabLayout>
-          }
+          path="category/edit/:categoryId"
+          element={<CreateCategoryRouteElement />}
         />
+        <Route path="categories" element={<CategoryManagementRouteElement />} />
+        <Route path="profile" element={<ProfileRouteElement />} />
         <Route
           path="notifications"
           element={
@@ -38,7 +37,10 @@ const AdminPanelPage = () => {
             </TabLayout>
           }
         />
-        <Route path="reset-password" element={<ResetPasswordTabRouteElement />} />
+        <Route
+          path="reset-password"
+          element={<ResetPasswordTabRouteElement />}
+        />
         <Route path="*" element={<Navigate to="articles" replace />} />
       </Routes>
     </AdminPanelShell>

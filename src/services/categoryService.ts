@@ -25,3 +25,39 @@ export async function getCategories(): Promise<Category[]> {
   const { data } = await axios.get<unknown>(`${apiBase()}/api/category`);
   return normalizeCategoriesPayload(data);
 }
+
+export async function createCategory(
+  categoryName: string,
+  token?: string | null,
+): Promise<void> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  await axios.post(
+    `${apiBase()}/api/category`,
+    { name: categoryName },
+    { headers },
+  );
+}
+
+export async function updateCategory(
+  categoryId: number,
+  categoryName: string,
+  token?: string | null,
+): Promise<void> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  await axios.put(
+    `${apiBase()}/api/category/${categoryId}`,
+    { name: categoryName },
+    { headers },
+  );
+}
+
+export async function deleteCategory(
+  categoryId: number,
+  token?: string | null,
+): Promise<void> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  await axios.delete(`${apiBase()}/api/category/${categoryId}`, { headers });
+}
