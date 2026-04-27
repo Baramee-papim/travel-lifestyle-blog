@@ -5,9 +5,34 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { getCategories } from "@/services/categoryService";
 import { createArticle } from "@/services/articleService";
+import { uploadArticleImage } from "@/services/storageService";
 import type { Category } from "@/types/category";
 
 type ArticleStatus = "draft" | "published";
+
+const resolveUploadErrorMessage = (error: unknown): string => {
+  if (!axios.isAxiosError(error)) {
+    return "Could not upload thumbnail. Please try again.";
+  }
+
+  const backendMessage = (error.response?.data?.message as string | undefined)?.toLowerCase() ?? "";
+  if (backendMessage.includes("size") || backendMessage.includes("5mb")) {
+    return "Image is too large. Please upload an image up to 5MB.";
+  }
+  if (
+    backendMessage.includes("jpeg") ||
+    backendMessage.includes("png") ||
+    backendMessage.includes("webp") ||
+    backendMessage.includes("allowed")
+  ) {
+    return "Unsupported file type. Please upload .jpg, .png, or .webp image.";
+  }
+  if (error.response?.status === 401) {
+    return "Unauthorized upload. Please login again.";
+  }
+
+  return (error.response?.data?.message as string | undefined) || "Could not upload thumbnail. Please try again.";
+};
 
 const useCreateArticle = () => {
   const { token } = useAuth();
@@ -17,8 +42,10 @@ const useCreateArticle = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
+  const [thumbnailUrl, setThumbnailUrl] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -53,12 +80,33 @@ const useCreateArticle = () => {
   const canSubmit = useMemo(() => {
     return (
       !isSubmitting &&
+      !isUploadingImage &&
       selectedCategoryId != null &&
+      thumbnailUrl.trim() !== "" &&
       title.trim() !== "" &&
       description.trim() !== "" &&
       content.trim() !== ""
     );
-  }, [content, description, isSubmitting, selectedCategoryId, title]);
+  }, [content, description, isSubmitting, isUploadingImage, selectedCategoryId, thumbnailUrl, title]);
+
+  const handleUploadThumbnail = async (file: File) => {
+    if (!token) {
+      toast.error("Your session has expired. Please login again.");
+      return;
+    }
+
+    setIsUploadingImage(true);
+    try {
+      const uploadedUrl = await uploadArticleImage(file, token);
+      setThumbnailUrl(uploadedUrl);
+      toast.success("Thumbnail uploaded successfully.");
+    } catch (error: unknown) {
+      console.error(error);
+      toast.error(resolveUploadErrorMessage(error));
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
 
   const handleSubmit = async (status: ArticleStatus) => {
     if (!canSubmit || selectedCategoryId == null) {
@@ -75,7 +123,7 @@ const useCreateArticle = () => {
     try {
       await createArticle(
         {
-          image: "",
+          image: thumbnailUrl.trim(),
           category_id: selectedCategoryId,
           title: title.trim(),
           description: description.trim(),
@@ -107,13 +155,16 @@ const useCreateArticle = () => {
     title,
     description,
     content,
+    thumbnailUrl,
     selectedCategoryId,
     isSubmitting,
+    isUploadingImage,
     canSubmit,
     setTitle,
     setDescription,
     setContent,
     setSelectedCategoryId,
+    handleUploadThumbnail,
     handleSubmit,
   };
 };

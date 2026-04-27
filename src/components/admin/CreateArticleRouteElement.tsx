@@ -35,12 +35,15 @@ const CreateArticleRouteElement = () => {
         title={createArticleState.title}
         description={createArticleState.description}
         content={createArticleState.content}
+        thumbnailUrl={createArticleState.thumbnailUrl}
         selectedCategoryId={createArticleState.selectedCategoryId}
         isSubmitting={createArticleState.isSubmitting}
+        isUploadingImage={createArticleState.isUploadingImage}
         onTitleChange={createArticleState.setTitle}
         onDescriptionChange={createArticleState.setDescription}
         onContentChange={createArticleState.setContent}
         onCategoryChange={createArticleState.setSelectedCategoryId}
+        onUploadThumbnail={createArticleState.handleUploadThumbnail}
       />
     </TabLayout>
   );
