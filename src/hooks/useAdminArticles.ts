@@ -10,8 +10,20 @@ const useAdminArticles = () => {
   const [articles, setArticles] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setDebouncedKeyword(searchInput.trim());
+    }, 500);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [searchInput]);
 
   useEffect(() => {
     let cancelled = false;
@@ -20,7 +32,9 @@ const useAdminArticles = () => {
       try {
         setLoading(true);
         setError(null);
-        const list = await getArticles(token);
+        const list = await getArticles(token, {
+          keyword: debouncedKeyword || undefined,
+        });
         if (!cancelled) {
           setArticles(list);
         }
@@ -40,7 +54,11 @@ const useAdminArticles = () => {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [debouncedKeyword, token]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+  };
 
   const handleOpenDeleteModal = (articleId: number) => {
     setPendingDeleteId(articleId);
@@ -79,8 +97,10 @@ const useAdminArticles = () => {
     articles,
     loading,
     error,
+    searchInput,
     pendingDeleteId,
     isDeleting,
+    handleSearchChange,
     handleOpenDeleteModal,
     handleCloseDeleteModal,
     handleConfirmDelete,

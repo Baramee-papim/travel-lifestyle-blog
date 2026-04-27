@@ -24,10 +24,29 @@ function normalizeArticlesPayload(data: unknown): BlogPost[] {
   return [];
 }
 
-export async function getArticles(token?: string | null): Promise<BlogPost[]> {
+type GetArticlesParams = {
+  keyword?: string;
+};
+
+export type CreateArticlePayload = {
+  image: string;
+  category_id: number;
+  title: string;
+  description: string;
+  content: string;
+  status: "draft" | "published";
+};
+
+export async function getArticles(
+  token?: string | null,
+  params?: GetArticlesParams,
+): Promise<BlogPost[]> {
   const headers =
     token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
-  const { data } = await axios.get<unknown>(`${apiBase()}/api/article`, { headers });
+  const { data } = await axios.get<unknown>(`${apiBase()}/api/article`, {
+    headers,
+    params,
+  });
   return normalizeArticlesPayload(data);
 }
 
@@ -43,4 +62,13 @@ export async function deleteArticle(
   const headers =
     token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
   await axios.delete(`${apiBase()}/api/article/${articleId}`, { headers });
+}
+
+export async function createArticle(
+  payload: CreateArticlePayload,
+  token?: string | null,
+): Promise<void> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  await axios.post(`${apiBase()}/api/article`, payload, { headers });
 }

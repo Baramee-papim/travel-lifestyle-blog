@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AdminPanelShell from "@/components/admin/AdminPanelShell";
 import ArticleManagementRouteElement from "@/components/admin/ArticleManagementRouteElement";
+import CreateArticleRouteElement from "@/components/admin/CreateArticleRouteElement";
 import PlaceholderContent from "@/components/admin/PlaceholderContent";
 import ResetPasswordTabRouteElement from "@/components/admin/ResetPasswordTabRouteElement";
 import TabLayout from "@/components/admin/TabLayout";
@@ -9,8 +10,9 @@ const AdminPanelPage = () => {
   return (
     <AdminPanelShell>
       <Routes>
+        <Route path="articles/create" element={<CreateArticleRouteElement />} />
         <Route path="articles" element={<ArticleManagementRouteElement />} />
-        
+
         <Route
           path="categories"
           element={

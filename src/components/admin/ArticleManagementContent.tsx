@@ -7,8 +7,10 @@ type ArticleManagementContentProps = {
   articles: BlogPost[];
   loading: boolean;
   error: string | null;
+  searchInput: string;
   pendingDeleteId: number | null;
   isDeleting: boolean;
+  onSearchChange: (value: string) => void;
   onOpenDeleteModal: (articleId: number) => void;
   onCloseDeleteModal: () => void;
   onConfirmDelete: () => Promise<void>;
@@ -18,8 +20,10 @@ const ArticleManagementContent = ({
   articles,
   loading,
   error,
+  searchInput,
   pendingDeleteId,
   isDeleting,
+  onSearchChange,
   onOpenDeleteModal,
   onCloseDeleteModal,
   onConfirmDelete,
@@ -33,6 +37,8 @@ const ArticleManagementContent = ({
           <input
             type="text"
             placeholder="Search..."
+            value={searchInput}
+            onChange={(event) => onSearchChange(event.target.value)}
             className="w-full bg-transparent text-body-2 text-brown-500 outline-none placeholder:text-brown-400"
           />
         </div>
