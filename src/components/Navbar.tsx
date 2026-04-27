@@ -4,6 +4,7 @@ import { Menu } from "@/components/ui/menu";
 import { useAuth } from "@/context/AuthContext";
 import {
   BellIcon,
+  OutIcon,
   RefreshIcon,
   SignOutSquareIcon,
   UserDuotoneIcon,
@@ -64,7 +65,7 @@ const Navbar = () => {
               </button>
 
               {showProfileDropdown ? (
-                <div className="absolute right-0 top-full mt-2 w-[320px] rounded-[12px] bg-brown-100 shadow-[2px_2px_16px_0_rgba(0,0,0,0.1)] overflow-hidden z-20">
+                <div className="absolute right-0 top-full mt-2 w-[230px] rounded-[12px] bg-brown-100 shadow-[2px_2px_16px_0_rgba(0,0,0,0.1)] overflow-hidden z-20">
                   <Menu
                     icon={UserDuotoneIcon}
                     name="Profile"
@@ -80,6 +81,17 @@ const Navbar = () => {
                       navigate("/reset-password");
                     }}
                   />
+                  {user.role === "admin" ? (
+                    <Menu
+                      icon={OutIcon}
+                      name="Admin panel"
+                      className="rounded-none bg-transparent shadow-none"
+                      onClick={() => {
+                        setShowProfileDropdown(false);
+                        navigate("/admin");
+                      }}
+                    />
+                  ) : null}
                   <div className="border-t border-brown-300" />
                   <Menu
                     icon={SignOutSquareIcon}

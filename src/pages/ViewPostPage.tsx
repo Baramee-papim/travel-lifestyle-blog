@@ -4,12 +4,12 @@ import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
 import Footer from "../components/Footer";
 import { Facebook, Linkedin, Twitter, Copy, Send, Heart } from "lucide-react";
-import axios from "axios";
 import AlertDialog from "../components/ui/alert-dialog";
 import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import type { ChangeEvent, FormEvent } from "react";
-import type { BlogPost, PostsApiResponse } from "../types/blog";
+import type { BlogPost } from "../types/blog";
+import { getArticleById } from "../services/articleService";
 
 interface PostComment {
     id: number;
@@ -63,9 +63,9 @@ const ViewPostPage = () => {
 
             try {
                 setLoading(true);
-                const response = await axios.get<BlogPost>(import.meta.env.VITE_API_BASE_URL + "/api/article/" + id);
-                setPost(response.data);
-                setLikes(response.data.likes ?? 0);
+                const article = await getArticleById(id);
+                setPost(article);
+                setLikes(article.likes_count ?? article.likes ?? 0);
                 setError(null);
             } catch (fetchError) {
                 console.error("Error fetching post:", fetchError);
@@ -228,7 +228,7 @@ const ViewPostPage = () => {
                         <div className="mb-4">
                             <div className="flex items-center gap-4 mb-4">
                                 <span className="bg-green-200 rounded-full px-3 py-1 text-sm font-semibold text-green-600">
-                                    {post.category}
+                                    {post.category || "Article"}
                                 </span>
                                 <span className="text-body-2 text-brown-400">
                                     {new Date(post.date).toLocaleDateString("en-GB", {
@@ -383,12 +383,12 @@ const ViewPostPage = () => {
                                 <img 
                                     className="w-20 h-20 rounded-full mb-4 object-cover"
                                     src="https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg" 
-                                    alt={post.author}
+                                    alt={post.author ?? "Author"}
                                 />
                                 
                                 {/* Author Name */}
                                 <h3 className="text-headline-4 font-semibold text-brown-600 mb-3">
-                                    {post.author}
+                                    {post.author ?? "Author"}
                                 </h3>
                                 
                                 {/* Author Bio */}

@@ -5,4 +5,5 @@ export type AuthUser = {
   name: string;
   role: string;
   profilePic?: string | null;
+  bio?: string | null;
 };

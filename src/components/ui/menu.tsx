@@ -13,7 +13,7 @@ const Menu = React.forwardRef<HTMLButtonElement, MenuProps>(
         <img
           src={icon}
           alt={name}
-          className="h-8 w-8 object-contain shrink-0 text-brown-400"
+          className="object-contain shrink-0 text-brown-400"
         />
       ) : (
         <span className="shrink-0 text-brown-400 [&_svg]:text-brown-400 [&_svg]:fill-current [&_svg]:stroke-current">

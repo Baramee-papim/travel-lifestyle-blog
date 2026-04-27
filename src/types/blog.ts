@@ -4,10 +4,12 @@ export interface BlogPost {
   category: string
   title: string
   description: string
-  author: string
+  author?: string
   date: string
   likes?: number
+  likes_count?: number
   content?: string
+  status?: string
 }
 
 export interface PostsApiResponse {

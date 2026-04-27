@@ -232,7 +232,7 @@ const ArticleSection = () => {
             category={blog.category}
             title={blog.title}
             description={blog.description}
-            author={blog.author}
+            author={blog.author ?? ""}
             date={new Date(blog.date).toLocaleDateString("en-GB", {
               day: "numeric",
               month: "long",
