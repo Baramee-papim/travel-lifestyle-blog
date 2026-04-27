@@ -28,6 +28,8 @@ type GetArticlesParams = {
   keyword?: string;
   category?: number;
   status?: "draft" | "published";
+  page?: number;
+  limit?: number;
 };
 
 export type CreateArticlePayload = {
