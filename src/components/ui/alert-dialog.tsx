@@ -3,10 +3,11 @@ import { X } from "lucide-react";
 interface AlertDialogProps {
   open: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onSignup: () => void;
+  onLogin: () => void;
 }
 
-const AlertDialog = ({ open, onClose, onConfirm }: AlertDialogProps) => {
+const AlertDialog = ({ open, onClose, onSignup, onLogin }: AlertDialogProps) => {
   if (!open) return null;
 
   return (
@@ -37,7 +38,7 @@ const AlertDialog = ({ open, onClose, onConfirm }: AlertDialogProps) => {
           {/* Button */}
           <div className="flex flex-col gap-4 px-15">
             <button
-              onClick={onConfirm}
+              onClick={onSignup}
               className="w-full bg-black text-white py-3 px-10 rounded-full hover:bg-gray-900 transition-colors font-medium"
             >
               Create account
@@ -47,7 +48,7 @@ const AlertDialog = ({ open, onClose, onConfirm }: AlertDialogProps) => {
             <p className="text-center text-sm text-gray-600">
               Already have an account?{" "}
               <button
-                onClick={onConfirm}
+                onClick={onLogin}
                 className="text-gray-800 hover:underline font-medium"
               >
                 Log in

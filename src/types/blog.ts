@@ -8,6 +8,8 @@ export interface BlogPost {
   date: string
   likes?: number
   likes_count?: number
+  /** Present on article detail when server resolves viewer; false for guests. */
+  liked_by_me?: boolean
   content?: string
   status?: string
 }
