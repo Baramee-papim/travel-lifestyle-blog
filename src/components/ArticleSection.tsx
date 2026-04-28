@@ -1,10 +1,12 @@
-import { useState, useEffect, useCallback, useRef, type ChangeEvent } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { Search } from "lucide-react";
+import { getArticles } from "@/services/articleService";
+import { getCategories } from "@/services/categoryService";
+import type { BlogPost } from "@/types/blog";
+import type { Category } from "@/types/category";
 import BlogCard from "./BlogCard";
-import axios from "axios";
-import type { BlogPost, PostsApiResponse } from "../types/blog";
+import BlogCardSkeleton from "./BlogCardSkeleton";
 import {
   Select,
   SelectContent,
@@ -13,56 +15,82 @@ import {
   SelectValue,
 } from "./ui/select";
 
+const PAGE_SIZE = 6;
+const ALL_CATEGORY_VALUE = "all";
+
+const normalizeValue = (value?: string | null): string => String(value ?? "").trim().toLowerCase();
+
+const isPublishedArticle = (article: BlogPost): boolean => {
+  const status = normalizeValue(article.status);
+  return status === "published" || status === "publish";
+};
+
+const matchesSearch = (article: BlogPost, query: string): boolean => {
+  const normalizedQuery = normalizeValue(query);
+  if (!normalizedQuery) {
+    return true;
+  }
+
+  const title = normalizeValue(article.title);
+  const description = normalizeValue(article.description);
+  const content = normalizeValue(article.content);
+
+  return (
+    title.includes(normalizedQuery) ||
+    description.includes(normalizedQuery) ||
+    content.includes(normalizedQuery)
+  );
+};
+
 const ArticleSection = () => {
   const navigate = useNavigate();
-  const [category, setCategory] = useState("Highlight");
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const categories = ["Highlight", "Cat", "Inspiration", "General"];
   const [allPosts, setAllPosts] = useState<BlogPost[]>([]);
   const [page, setPage] = useState(1);
-  const [limit] = useState(6);
   const [hasMore, setHasMore] = useState(true);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isFetchingRef = useRef(false);
 
   const fetchPosts = useCallback(
     async (
-      selectedCategory: string,
-      pageNum: number = 1,
-      limitNum: number = 6,
+      pageNum: number,
+      { replace, categoryId }: { replace: boolean; categoryId: number | null },
     ): Promise<void> => {
-      // Prevent duplicate requests
       if (isFetchingRef.current) return;
 
       try {
         isFetchingRef.current = true;
         setLoading(true);
-        let url = "https://blog-post-project-api.vercel.app/posts";
-        const params = new URLSearchParams();
+        setErrorMessage(null);
 
-        if (selectedCategory) {
-          params.append("category", selectedCategory);
-        }
-        params.append("page", pageNum.toString());
-        params.append("limit", limitNum.toString());
+        const fetchedPosts = await getArticles({
+          status: "published",
+          page: pageNum,
+          limit: PAGE_SIZE,
+          ...(categoryId != null ? { category: categoryId } : {}),
+        });
 
-        url += `?${params.toString()}`;
+        const newPosts = fetchedPosts.filter(isPublishedArticle);
 
-        const response = await axios.get<PostsApiResponse>(url);
-        const newPosts = response.data.posts || [];
-
-        if (pageNum === 1) {
-          // First page - replace all posts
+        if (replace) {
           setAllPosts(newPosts);
         } else {
-          // Subsequent pages - append to existing posts
-          setAllPosts((prev) => [...prev, ...newPosts]);
+          setAllPosts((prev) => {
+            const merged = [...prev, ...newPosts];
+            return merged.filter(
+              (post, index, currentPosts) =>
+                currentPosts.findIndex((currentPost) => currentPost.id === post.id) === index,
+            );
+          });
         }
 
-        // Check if there are more posts
-        setHasMore(newPosts.length === limitNum);
+        setHasMore(fetchedPosts.length === PAGE_SIZE);
       } catch (error) {
         console.error("Error fetching posts:", error);
+        setErrorMessage("Unable to load articles right now. Please try again.");
         setHasMore(false);
       } finally {
         setLoading(false);
@@ -72,40 +100,45 @@ const ArticleSection = () => {
     [],
   );
 
-  const handleSearchChange = (event: ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
+  useEffect(() => {
+    let cancelled = false;
+    void getCategories()
+      .then((list) => {
+        if (!cancelled) {
+          setCategories(list);
+        }
+      })
+      .catch((error) => {
+        console.error("Error fetching categories:", error);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
-    // Reset page to 1 when category changes
     setPage(1);
+    setLoading(true);
     setAllPosts([]);
     setHasMore(true);
-    isFetchingRef.current = false; // Reset fetching flag
-    fetchPosts(category, 1, 6);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+    isFetchingRef.current = false;
+    void fetchPosts(1, { replace: true, categoryId: selectedCategoryId });
+  }, [selectedCategoryId, fetchPosts]);
 
   const handleViewMore = () => {
+    if (loading || !hasMore) {
+      return;
+    }
+
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchPosts(category, nextPage, limit);
+    void fetchPosts(nextPage, { replace: false, categoryId: selectedCategoryId });
   };
 
-  // Filter posts based on search query (search in title, description, and content)
-  const filteredPosts = searchQuery.trim()
-    ? allPosts.filter((post) => {
-        const query = searchQuery.toLowerCase();
-        const title = (post.title || "").toLowerCase();
-        const description = (post.description || "").toLowerCase();
-        const content = (post.content || "").toLowerCase();
-        return (
-          title.includes(query) ||
-          description.includes(query) ||
-          content.includes(query)
-        );
-      })
-    : [];
+  const filteredPosts = useMemo(
+    () => allPosts.filter((post) => matchesSearch(post, searchQuery)),
+    [allPosts, searchQuery],
+  );
 
   const handlePostClick = (postId: number) => {
     navigate(`/post/${postId}`);
@@ -122,19 +155,32 @@ const ArticleSection = () => {
         {/* Desktop Layout */}
         <div className="hidden md:flex items-center justify-between gap-4 bg-brown-100 py-4 px-6 rounded-[16px]">
           {/* Category Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={selectedCategoryId === null}
+              onClick={() => setSelectedCategoryId(null)}
+              className={`px-4 py-2 rounded-sm transition-colors ${
+                selectedCategoryId === null
+                  ? "bg-brown-500 text-white"
+                  : " hover:bg-gray-300"
+              } `}
+            >
+              All
+            </button>
             {categories.map((cat) => (
               <button
-                key={cat}
-                disabled={category === cat} // ปิดการคลิกปุ่มที่ถูกเลือก
-                onClick={() => setCategory(cat)} // เปลี่ยน State เมื่อคลิก
+                type="button"
+                key={cat.id}
+                disabled={selectedCategoryId === cat.id}
+                onClick={() => setSelectedCategoryId(cat.id)}
                 className={`px-4 py-2 rounded-sm transition-colors ${
-                  category === cat
+                  selectedCategoryId === cat.id
                     ? "bg-brown-500 text-white"
-                    : " hover:bg-gray-300" // สีปุ่มเมื่อไม่ได้ถูกเลือก
+                    : " hover:bg-gray-300"
                 } `}
               >
-                {cat}
+                {cat.name}
               </button>
             ))}
           </div>
@@ -145,7 +191,7 @@ const ArticleSection = () => {
               type="text"
               placeholder="Search"
               value={searchQuery}
-              onChange={handleSearchChange}
+              onChange={(event) => setSearchQuery(event.target.value)}
               className="w-full px-4 py-2 pr-10 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 bg-white focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent"
             />
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-brown-400 pointer-events-none" />
@@ -177,7 +223,7 @@ const ArticleSection = () => {
               type="text"
               placeholder="Search"
               value={searchQuery}
-              onChange={handleSearchChange}
+              onChange={(event) => setSearchQuery(event.target.value)}
               className="w-full px-4 py-2 pr-10 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent"
             />
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-brown-400 pointer-events-none" />
@@ -206,16 +252,26 @@ const ArticleSection = () => {
               Category
             </label>
             <Select
-              value={category || undefined}
-              onValueChange={(value) => setCategory(value)}
+              value={selectedCategoryId === null ? ALL_CATEGORY_VALUE : String(selectedCategoryId)}
+              onValueChange={(value) => {
+                if (value === ALL_CATEGORY_VALUE) {
+                  setSelectedCategoryId(null);
+                  return;
+                }
+                const id = Number(value);
+                if (!Number.isNaN(id)) {
+                  setSelectedCategoryId(id);
+                }
+              }}
             >
               <SelectTrigger className="w-full px-4 py-3 border border-brown-300 text-brown-400 bg-white text-body-1 ">
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value={ALL_CATEGORY_VALUE}>All</SelectItem>
                 {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
+                  <SelectItem key={cat.id} value={String(cat.id)}>
+                    {cat.name}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -223,23 +279,46 @@ const ArticleSection = () => {
           </div>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4">
-        {allPosts.map((blog) => (
-          <BlogCard
-            key={blog.id}
-            id={blog.id}
-            image={blog.image}
-            category={blog.category}
-            title={blog.title}
-            description={blog.description}
-            author={blog.author ?? ""}
-            date={new Date(blog.date).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}
-          />
-        ))}
+      {errorMessage && (
+        <p className="px-4 text-body-2 text-red-600" role="alert">
+          {errorMessage}
+        </p>
+      )}
+      <div
+        className="grid grid-cols-1 md:grid-cols-2 gap-4 px-4 py-4"
+        aria-busy={loading && allPosts.length === 0}
+      >
+        {loading && allPosts.length === 0 ? (
+          Array.from({ length: PAGE_SIZE }, (_, index) => (
+            <BlogCardSkeleton key={`article-skeleton-${index}`} />
+          ))
+        ) : allPosts.length > 0 ? (
+          allPosts.map((blog) => (
+            <BlogCard
+              key={blog.id}
+              id={blog.id}
+              image={blog.image}
+              category={blog.category}
+              title={blog.title}
+              description={blog.description}
+              author={blog.author ?? ""}
+              date={new Date(blog.date).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            />
+          ))
+        ) : !errorMessage ? (
+          <p
+            className="col-span-1 md:col-span-2 py-12 text-center text-body-1 text-brown-500"
+            role="status"
+          >
+            {selectedCategoryId !== null
+              ? "No articles for this category."
+              : "No articles yet."}
+          </p>
+        ) : null}
       </div>
 
       {/* View More Button */}

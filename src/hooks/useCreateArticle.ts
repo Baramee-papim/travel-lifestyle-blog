@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { getCategories } from "@/services/categoryService";
-import { createArticle, getArticleById, updateArticle } from "@/services/articleService";
+import { createArticle, getAdminArticleById, updateArticle } from "@/services/articleService";
 import { uploadArticleImage } from "@/services/storageService";
 import type { Category } from "@/types/category";
 
@@ -88,11 +88,16 @@ const useCreateArticle = (articleId?: string) => {
       return;
     }
 
+    if (token == null || token === "") {
+      setIsLoadingArticle(false);
+      return;
+    }
+
     let cancelled = false;
     const loadArticle = async () => {
       try {
         setIsLoadingArticle(true);
-        const article = await getArticleById(articleId);
+        const article = await getAdminArticleById(articleId, token);
         if (cancelled) return;
         setTitle(article.title ?? "");
         setDescription(article.description ?? "");
@@ -116,7 +121,7 @@ const useCreateArticle = (articleId?: string) => {
     return () => {
       cancelled = true;
     };
-  }, [articleId, isEditMode, navigate]);
+  }, [articleId, isEditMode, navigate, token]);
 
   useEffect(() => {
     if (categories.length === 0 || articleCategoryName == null) return;

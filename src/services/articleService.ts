@@ -28,6 +28,8 @@ type GetArticlesParams = {
   keyword?: string;
   category?: number;
   status?: "draft" | "published";
+  page?: number;
+  limit?: number;
 };
 
 export type CreateArticlePayload = {
@@ -39,21 +41,44 @@ export type CreateArticlePayload = {
   status: "draft" | "published";
 };
 
-export async function getArticles(
-  token?: string | null,
+/** Public list — server returns published only. */
+export async function getArticles(params?: GetArticlesParams): Promise<BlogPost[]> {
+  const { data } = await axios.get<unknown>(`${apiBase()}/api/article`, {
+    params,
+  });
+  return normalizeArticlesPayload(data);
+}
+
+/** Admin list — requires Bearer token and admin role. */
+export async function getAdminArticles(
+  token: string | null | undefined,
   params?: GetArticlesParams,
 ): Promise<BlogPost[]> {
   const headers =
     token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
-  const { data } = await axios.get<unknown>(`${apiBase()}/api/article`, {
+  const { data } = await axios.get<unknown>(`${apiBase()}/api/admin/article`, {
     headers,
     params,
   });
   return normalizeArticlesPayload(data);
 }
 
+/** Public detail — non-published returns 404 from API. */
 export async function getArticleById(id: string | number): Promise<BlogPost> {
   const { data } = await axios.get<{ data: BlogPost }>(`${apiBase()}/api/article/${id}`);
+  return data.data;
+}
+
+/** Admin detail — draft and published allowed when token is admin. */
+export async function getAdminArticleById(
+  id: string | number,
+  token: string | null | undefined,
+): Promise<BlogPost> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  const { data } = await axios.get<{ data: BlogPost }>(`${apiBase()}/api/admin/article/${id}`, {
+    headers,
+  });
   return data.data;
 }
 

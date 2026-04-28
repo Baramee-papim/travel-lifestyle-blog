@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { deleteArticle, getArticles } from "@/services/articleService";
+import { deleteArticle, getAdminArticles } from "@/services/articleService";
 import { getCategories } from "@/services/categoryService";
 import type { BlogPost } from "@/types/blog";
 import type { Category } from "@/types/category";
@@ -67,7 +67,7 @@ const useAdminArticles = () => {
       try {
         setLoading(true);
         setError(null);
-        const list = await getArticles(token, {
+        const list = await getAdminArticles(token, {
           keyword: debouncedKeyword || undefined,
           category: selectedCategoryId ?? undefined,
           status: selectedStatus === "all" ? undefined : selectedStatus,
