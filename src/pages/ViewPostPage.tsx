@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useAuth } from "../context/AuthContext";
@@ -9,62 +9,64 @@ import ReactMarkdown from "react-markdown";
 import { toast } from "sonner";
 import type { ChangeEvent, FormEvent } from "react";
 import type { BlogPost } from "../types/blog";
+import type { ArticleCommentDisplay } from "../types/comment";
 import { getArticleById, likeArticle } from "../services/articleService";
+import {
+  createArticleComment,
+  getArticleComments,
+  getCommentRequestErrorMessage,
+  mapCommentRowToDisplay,
+} from "../services/commentService";
 import NotFoundPage from "./NotFoundPage";
 import { useNavigate } from "react-router-dom";
-
-interface PostComment {
-  id: number;
-  author: string;
-  avatar: string;
-  date: string;
-  content: string;
-}
+import { cn } from "@/lib/utils";
 
 const ViewPostPage = () => {
   const { id } = useParams<{ id: string }>();
-  const { isAuthenticated: isLoggedIn, token } = useAuth();
+  const { isAuthenticated: isLoggedIn, token, isAuthReady } = useAuth();
   const navigate = useNavigate();
   const [comment, setComment] = useState("");
   const [post, setPost] = useState<BlogPost | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAlertDialog, setShowAlertDialog] = useState(false);
-  const [likes, setLikes] = useState(0); // จำนวนไลก์จะดึงจาก database
+  const [likes, setLikes] = useState(0);
+  const [userHasLiked, setUserHasLiked] = useState(false);
   const [likeSubmitting, setLikeSubmitting] = useState(false);
-  const [comments, setComments] = useState<PostComment[]>([
-    // Mock comments data - จะดึงจาก database ในอนาคต
-    {
-      id: 1,
-      author: "Jacob Lash",
-      avatar:
-        "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg",
-      date: "12 September 2024 at 18:30",
-      content:
-        "I loved this article! It really explains why my cat is so independent yet loving. The purring section was super interesting.",
-    },
-    {
-      id: 2,
-      author: "Ahri",
-      avatar:
-        "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg",
-      date: "12 September 2024 at 18:30",
-      content:
-        "Such a great read! I've always wondered why my my cat slow blinks at me—now I know it's her way of showing trust!",
-    },
-    {
-      id: 3,
-      author: "Mimi mama",
-      avatar:
-        "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg",
-      date: "12 September 2024 at 18:30",
-      content:
-        "This article perfectly captures why cats make such amazing pets. I had no idea their purring could help with healing. Fascinating stuff!",
-    },
-  ]);
+  const [comments, setComments] = useState<ArticleCommentDisplay[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsError, setCommentsError] = useState<string | null>(null);
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
+
+  const fetchComments = useCallback(async () => {
+    if (!id) {
+      return;
+    }
+    setCommentsLoading(true);
+    setCommentsError(null);
+    try {
+      const rows = await getArticleComments(id);
+      setComments(rows.map(mapCommentRowToDisplay));
+    } catch (err) {
+      console.error("Error fetching comments:", err);
+      setComments([]);
+      setCommentsError(
+        getCommentRequestErrorMessage(err, "Could not load comments. Please try again."),
+      );
+    } finally {
+      setCommentsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => {
+    void fetchComments();
+  }, [fetchComments]);
 
   useEffect(() => {
     const fetchPost = async () => {
+      if (!isAuthReady) {
+        return;
+      }
       if (!id) {
         setError("Post not found");
         setLoading(false);
@@ -73,10 +75,11 @@ const ViewPostPage = () => {
 
       try {
         setLoading(true);
-        const article = await getArticleById(id);
+        const article = await getArticleById(id, token);
         setPost(article);
         setLikes(article.likes_count ?? article.likes ?? 0);
         setError(null);
+        setUserHasLiked(Boolean(article.liked_by_me));
       } catch (fetchError) {
         console.error("Error fetching post:", fetchError);
         setError("Failed to load post");
@@ -85,8 +88,8 @@ const ViewPostPage = () => {
       }
     };
 
-    fetchPost();
-  }, [id]);
+    void fetchPost();
+  }, [id, token, isAuthReady]);
 
   const handleCopyLink = async () => {
     try {
@@ -104,13 +107,14 @@ const ViewPostPage = () => {
       setShowAlertDialog(true);
       return;
     }
-    if (!id || likeSubmitting) {
+    if (!id || likeSubmitting || userHasLiked) {
       return;
     }
     setLikeSubmitting(true);
     try {
       const result = await likeArticle(id, token);
       setLikes(result.likes_count);
+      setUserHasLiked(true);
       if (result.already_liked) {
         toast.info("You already liked this article.");
       } else {
@@ -151,40 +155,32 @@ const ViewPostPage = () => {
 
   const handleCommentSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!isLoggedIn) {
+    if (!isLoggedIn || !token) {
       setShowAlertDialog(true);
       return;
     }
-
-    if (!comment.trim()) {
-      return; // ไม่ส่ง comment ถ้าว่าง
+    if (!id || !comment.trim() || commentSubmitting) {
+      return;
     }
 
-    // เพิ่ม comment ใหม่ (mock - จะเชื่อม API ในอนาคต)
-    const newComment = {
-      id: comments.length + 1,
-      author: "You", // ในอนาคตจะดึงจาก user profile
-      avatar:
-        "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg",
-      date:
-        new Date().toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }) +
-        " at " +
-        new Date().toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      content: comment,
-    };
-
-    setComments([...comments, newComment]);
-    setComment("");
-
-    // TODO: ส่ง comment ไป backend
-    // await axios.post(`/posts/${id}/comments`, { content: comment });
+    const contentToSend = comment.trim();
+    setCommentSubmitting(true);
+    void (async () => {
+      try {
+        const row = await createArticleComment(id, contentToSend, token);
+        const display = mapCommentRowToDisplay(row);
+        setComments((prev) => [...prev, display]);
+        setComment("");
+        toast.success("Comment posted");
+      } catch (err) {
+        console.error("Comment submit error:", err);
+        toast.error(
+          getCommentRequestErrorMessage(err, "Could not post your comment. Please try again."),
+        );
+      } finally {
+        setCommentSubmitting(false);
+      }
+    })();
   };
 
   const handleCommentChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
@@ -287,10 +283,19 @@ const ViewPostPage = () => {
                   <button
                     type="button"
                     onClick={() => void handleLike()}
-                    disabled={likeSubmitting}
-                    className="flex items-center gap-2 px-4 py-2 bg-white text-brown-600 rounded-full border border-brown-400 hover:bg-brown-300 transition-colors text-body-2 disabled:opacity-60 disabled:pointer-events-none"
+                    disabled={likeSubmitting || userHasLiked}
+                    title={userHasLiked ? "You liked this article" : undefined}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2 rounded-full border border-brown-400 transition-colors text-body-2 disabled:opacity-60 disabled:pointer-events-none",
+                      userHasLiked
+                        ? "bg-white text-red-600 "
+                        : "bg-white text-brown-600 hover:bg-brown-300",
+                      likeSubmitting && "pointer-events-none",
+                    )}
                   >
-                    <Heart className="w-4 h-4" />
+                    <Heart
+                      className={cn("w-4 h-4", userHasLiked && "fill-red-500 text-red-500")}
+                    />
                     {likes}
                   </button>
                 </div>
@@ -334,59 +339,75 @@ const ViewPostPage = () => {
                     value={comment}
                     onChange={handleCommentChange}
                     onFocus={handleCommentFocus}
+                    disabled={commentSubmitting}
                     placeholder="What are your thoughts?"
-                    className="w-full px-4 py-3 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent resize-none"
+                    className="w-full px-4 py-3 border border-brown-300 rounded-md text-body-1 text-brown-600 placeholder-brown-400 focus:outline-none focus:ring-2 focus:ring-brown-400 focus:border-transparent resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                     rows={4}
                   />
                   <div className="flex justify-end">
                     <button
                       type="submit"
-                      className="flex items-center gap-2 px-6 py-2 bg-brown-600 text-white rounded-full hover:bg-brown-500 transition-colors"
+                      disabled={commentSubmitting || !comment.trim()}
+                      className="flex items-center gap-2 px-6 py-2 bg-brown-600 text-white rounded-full hover:bg-brown-500 transition-colors disabled:opacity-50 disabled:pointer-events-none"
                     >
                       <Send className="w-4 h-4" />
-                      Send
+                      {commentSubmitting ? "Sending…" : "Send"}
                     </button>
                   </div>
                 </form>
 
                 {/* Comments List */}
                 <div className="space-y-6">
-                  {comments.map((commentItem, index) => (
-                    <div key={commentItem.id}>
-                      <div className="flex gap-4">
-                        {/* Avatar */}
-                        <div className="shrink-0">
-                          <img
-                            src={commentItem.avatar}
-                            alt={commentItem.author}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                        </div>
+                  {commentsLoading && (
+                    <p className="text-body-2 text-brown-500 text-center py-8">
+                      Loading comments…
+                    </p>
+                  )}
 
-                        {/* Comment Content */}
-                        <div className="flex-1">
-                          <div className="mb-2">
-                            <h4 className="text-body-1 font-semibold text-brown-600">
-                              {commentItem.author}
-                            </h4>
-                            <p className="text-body-2 text-brown-400">
-                              {commentItem.date}
+                  {!commentsLoading && commentsError && (
+                    <div className="rounded-md border border-red-200 bg-red-50 px-4 py-4 text-center space-y-3">
+                      <p className="text-body-2 text-red-700">{commentsError}</p>
+                      <button
+                        type="button"
+                        onClick={() => void fetchComments()}
+                        className="text-body-2 font-medium text-brown-700 underline hover:text-brown-600"
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  )}
+
+                  {!commentsLoading &&
+                    !commentsError &&
+                    comments.map((commentItem, index) => (
+                      <div key={commentItem.id}>
+                        <div className="flex gap-4">
+                          <div className="shrink-0">
+                            <img
+                              src={commentItem.avatar}
+                              alt={commentItem.author}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1">
+                            <div className="mb-2">
+                              <h4 className="text-body-1 font-semibold text-brown-600">
+                                {commentItem.author}
+                              </h4>
+                              <p className="text-body-2 text-brown-400">{commentItem.date}</p>
+                            </div>
+                            <p className="text-body-1 text-brown-500 leading-relaxed whitespace-pre-wrap">
+                              {commentItem.content}
                             </p>
                           </div>
-                          <p className="text-body-1 text-brown-500 leading-relaxed">
-                            {commentItem.content}
-                          </p>
                         </div>
+                        {index < comments.length - 1 && (
+                          <div className="mt-6 border-t border-brown-200"></div>
+                        )}
                       </div>
+                    ))}
 
-                      {/* Divider */}
-                      {index < comments.length - 1 && (
-                        <div className="mt-6 border-t border-brown-200"></div>
-                      )}
-                    </div>
-                  ))}
-
-                  {comments.length === 0 && (
+                  {!commentsLoading && !commentsError && comments.length === 0 && (
                     <p className="text-body-2 text-brown-400 text-center py-8">
                       No comments yet. Be the first to comment!
                     </p>

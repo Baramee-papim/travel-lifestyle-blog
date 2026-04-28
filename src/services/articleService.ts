@@ -63,9 +63,16 @@ export async function getAdminArticles(
   return normalizeArticlesPayload(data);
 }
 
-/** Public detail — non-published returns 404 from API. */
-export async function getArticleById(id: string | number): Promise<BlogPost> {
-  const { data } = await axios.get<{ data: BlogPost }>(`${apiBase()}/api/article/${id}`);
+/** Public detail — non-published returns 404 from API. Pass token to resolve `liked_by_me`. */
+export async function getArticleById(
+  id: string | number,
+  token?: string | null,
+): Promise<BlogPost> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  const { data } = await axios.get<{ data: BlogPost }>(`${apiBase()}/api/article/${id}`, {
+    headers,
+  });
   return data.data;
 }
 
