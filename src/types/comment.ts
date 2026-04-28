@@ -8,14 +8,11 @@ export type ArticleCommentRow = {
   author_avatar: string | null;
 };
 
-/** Normalized for list UI. */
+/** Normalized for list UI. `avatar` null → show default user icon (see Navbar). */
 export type ArticleCommentDisplay = {
   id: number;
   author: string;
-  avatar: string;
+  avatar: string | null;
   date: string;
   content: string;
 };
-
-export const COMMENT_PLACEHOLDER_AVATAR =
-  "https://res.cloudinary.com/dcbpjtd1r/image/upload/v1728449784/my-blog-post/xgfy0xnvyemkklcqodkg.jpg";

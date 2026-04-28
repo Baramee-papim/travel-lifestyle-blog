@@ -1,6 +1,5 @@
 import axios from "axios";
 import type { ArticleCommentDisplay, ArticleCommentRow } from "@/types/comment";
-import { COMMENT_PLACEHOLDER_AVATAR } from "@/types/comment";
 
 function apiBase(): string {
   return import.meta.env.VITE_API_BASE_URL;
@@ -12,7 +11,7 @@ export function mapCommentRowToDisplay(row: ArticleCommentRow): ArticleCommentDi
   return {
     id: row.id,
     author,
-    avatar: row.author_avatar?.trim() || COMMENT_PLACEHOLDER_AVATAR,
+    avatar: row.author_avatar?.trim() || null,
     date: formatCommentDate(row.created_at),
     content: row.content,
   };

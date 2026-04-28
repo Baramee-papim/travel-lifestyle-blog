@@ -1,5 +1,6 @@
 import { Send } from "lucide-react";
 import type { ChangeEvent, FocusEvent, FormEvent } from "react";
+import { UserDuotoneIcon } from "@/components/icon";
 import type { ArticleCommentDisplay } from "@/types/comment";
 
 type ViewPostCommentsSectionProps = {
@@ -13,6 +14,17 @@ type ViewPostCommentsSectionProps = {
   onSubmit: (e: FormEvent<HTMLFormElement>) => void;
   onRetryComments: () => void;
 };
+
+function CommentListAvatar({ url, author }: { url: string | null; author: string }) {
+  if (url) {
+    return <img src={url} alt={author} className="w-10 h-10 rounded-full object-cover" />;
+  }
+  return (
+    <span className="w-10 h-10 rounded-full border border-brown-300 bg-white flex items-center justify-center">
+      <img src={UserDuotoneIcon} alt={author} className="object-cover rounded-full" />
+    </span>
+  );
+}
 
 const ViewPostCommentsSection = ({
   comment,
@@ -74,11 +86,7 @@ const ViewPostCommentsSection = ({
             <div key={commentItem.id}>
               <div className="flex gap-4">
                 <div className="shrink-0">
-                  <img
-                    src={commentItem.avatar}
-                    alt={commentItem.author}
-                    className="w-10 h-10 rounded-full object-cover"
-                  />
+                  <CommentListAvatar url={commentItem.avatar} author={commentItem.author} />
                 </div>
                 <div className="flex-1">
                   <div className="mb-2">
