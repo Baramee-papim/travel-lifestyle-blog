@@ -66,7 +66,7 @@ const ArticleSection = () => {
         setLoading(true);
         setErrorMessage(null);
 
-        const fetchedPosts = await getArticles(undefined, {
+        const fetchedPosts = await getArticles({
           status: "published",
           page: pageNum,
           limit: PAGE_SIZE,
