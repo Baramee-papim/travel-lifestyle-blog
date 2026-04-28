@@ -70,7 +70,9 @@ const Navbar = () => {
                     icon={UserDuotoneIcon}
                     name="Profile"
                     className="rounded-none bg-transparent shadow-none"
-                    onClick={() => setShowProfileDropdown(false)}
+                    onClick={() => {setShowProfileDropdown(false)
+                      user.role === "admin" ? navigate("/admin/profile") : navigate("/profile");
+                    }}
                   />
                   <Menu
                     icon={RefreshIcon}
@@ -78,7 +80,7 @@ const Navbar = () => {
                     className="rounded-none bg-transparent shadow-none"
                     onClick={() => {
                       setShowProfileDropdown(false);
-                      navigate("/reset-password");
+                      user.role === "admin" ? navigate("/admin/reset-password") : navigate("/reset-password");
                     }}
                   />
                   {user.role === "admin" ? (
