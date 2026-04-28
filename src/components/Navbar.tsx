@@ -44,18 +44,18 @@ const Navbar = () => {
                 className="flex items-center gap-2 cursor-pointer"
                 onClick={() => setShowProfileDropdown((prev) => !prev)}
               >
-              <span className="w-12 h-12 rounded-full border border-brown-300 bg-white flex items-center justify-center hover:border-brown-400 transition-colors hover:cursor-pointer">
+              <span className="w-12 h-12 overflow-hidden rounded-full border border-brown-300 bg-white flex items-center justify-center hover:border-brown-400 transition-colors hover:cursor-pointer">
                 {user.profilePic ? (
                   <img
                     src={user.profilePic}
                     alt="user"
-                    className="object-cover rounded-full"
+                    className="h-full w-full object-cover"
                   />
                 ) : (
                   <img
                   src={UserDuotoneIcon}
                   alt="user"
-                  className="object-cover rounded-full"
+                  className="h-full w-full object-cover"
                 />
                 )}
               </span>
