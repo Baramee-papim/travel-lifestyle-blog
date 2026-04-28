@@ -109,3 +109,23 @@ export async function updateArticle(
     token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
   await axios.put(`${apiBase()}/api/article/${articleId}`, payload, { headers });
 }
+
+export type LikeArticleResponse = {
+  likes_count: number;
+  already_liked: boolean;
+};
+
+/** Authenticated — inserts into `likes` and bumps posts.likes_count when new. */
+export async function likeArticle(
+  articleId: string | number,
+  token: string | null | undefined,
+): Promise<LikeArticleResponse> {
+  const headers =
+    token != null && token !== "" ? { Authorization: `Bearer ${token}` } : undefined;
+  const { data } = await axios.post<{ data: LikeArticleResponse }>(
+    `${apiBase()}/api/article/${articleId}/like`,
+    {},
+    { headers },
+  );
+  return data.data;
+}
