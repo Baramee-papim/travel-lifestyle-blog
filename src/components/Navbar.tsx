@@ -10,6 +10,8 @@ import {
   UserDuotoneIcon,
 } from "@/components/icon";
 import { useState } from "react";
+import logoImage from "@/assets/logo.png";
+import hamburgerImage from "@/assets/hamburger.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -27,7 +29,7 @@ const Navbar = () => {
       {/* Logo Section */}
       <div className="flex items-center gap-1">
         <Link to="/">
-          <img src="/src/assets/logo.png" alt="logo" />
+          <img src={logoImage} alt="logo" />
         </Link>
       </div>
 
@@ -129,7 +131,7 @@ const Navbar = () => {
 
       {/* Hamburger button - Shown on mobile only */}
       <button className="md:hidden p-2">
-        <img src="src/assets/hamburger.png" alt="hamburger" />
+        <img src={hamburgerImage} alt="hamburger" />
       </button>
     </nav>
   );

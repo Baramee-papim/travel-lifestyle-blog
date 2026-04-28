@@ -1,3 +1,5 @@
+import heroPicture from "@/assets/hero-picture.png";
+
 const HeroSection = () => {
   return (
     <section className="bg-brown-100 px-4 py-10">
@@ -18,9 +20,9 @@ const HeroSection = () => {
           {/* Middle - Image Card (Mobile) | Center (Desktop) */}
           <div className="order-2 lg:order-2">
             <div className="rounded-lg overflow-hidden">
-              <img 
-                src="src/assets/hero-picture.png" 
-                alt="Person with cat in outdoor setting" 
+              <img
+                src={heroPicture}
+                alt="Person with cat in outdoor setting"
                 className="w-full h-auto object-cover"
               />
             </div>
